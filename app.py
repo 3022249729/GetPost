@@ -72,12 +72,21 @@ def register():
         if password != confirm_password:
             flash("Confirm_password enter not the same as password", "error")
             return response
+        # Hash the password with bcrypt and insert into database
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         credential_collection.insert_one({
             "username": username,
             "password_hash": hashed_password
         })
-        return response
+        # Redirect response after successful registration ( should load to new page)
+        success_response = (
+            "HTTP/1.1 302 Found\r\n"
+            "Location: /login\r\n"
+            "Content-Type: text/html; charset=utf-8\r\n\r\n"
+        ).encode('utf-8')
+        flash("Registration successful! You can now log in.", "success")
+        return success_response
+
     if request.method == 'GET':
         response = make_response(render_template('register.html'))
         response.headers['X-Content-Type-Options'] = 'nosniff'
