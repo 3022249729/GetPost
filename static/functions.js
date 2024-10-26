@@ -8,3 +8,4 @@ function updateHome() {
     request.open("GET", "/posts");
     request.send();
 }
+
