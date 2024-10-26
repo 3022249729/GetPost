@@ -1,0 +1,64 @@
+import hashlib
+import secrets
+import bcrypt
+from pymongo import MongoClient
+from flask import Flask, render_template, request, redirect, flash
+
+app = Flask(__name__)
+app.secret_key = "secret_key"
+
+mongo_client = MongoClient("mongo")
+db = mongo_client["cse312"]
+credential_collection = db["credential"]
+
+def decode_percent_encoded(string):
+    decoded_string = ''
+    i = 0
+    while i < len(string):
+        if string[i] == '%':
+            hex_value = string[i + 1:i + 3]
+            decoded_string += chr(int(hex_value, 16))
+            i += 3
+        else:
+            decoded_string += string[i]
+            i += 1
+    return decoded_string
+
+
+def extract_credentials(request):
+    body = request.data.decode("utf-8")
+    pair = body.split('&')
+    Credential = [None,None,None]
+    for info in pair:
+        if '=' not in info:
+            continue
+        key, value = info.split('=')
+        if key == 'username':
+            Credential[0] = value
+        elif key == 'password':
+            Credential[1] = decode_percent_encoded(value)
+        elif key == 'confirm_password':
+            Credential[2] = decode_percent_encoded(value)
+    return Credential
+
+def validate_password(password):
+    special_characters = {'!', '@', '#', '$', '%', '^', '&', '(', ')', '-', '_', '='}
+    if len(password) < 8:
+        return False
+    has_lowercase = False
+    has_uppercase = False
+    has_digit = False
+    has_special = False
+    for char in password:
+        if char.isupper():
+            has_uppercase = True
+        elif char.islower():
+            has_lowercase = True
+        elif char.isnumeric():
+            has_digit = True
+        elif char in special_characters:
+            has_special = True
+        else:
+            return False
+    return has_lowercase and has_uppercase and has_digit and has_special
+

@@ -15,8 +15,8 @@
     <form action="/register" method="post">
         <input type="text" name="username" placeholder="Username" required>
         <input type="password" name="password" placeholder="Password" required>
-        <input type="password" name="password" placeholder="Confirm Password" required>
-        <button type="submit">Login</button>
+        <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+        <button type="submit">Register</button>
     </form>
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -25,9 +25,6 @@
             </div>
         {% endif %}
     {% endwith %}
-    <div class="footer">
-        <p>Don't have an account? <a href="/register">Register here</a></p>
-    </div>
 </div>
 
 </body>
