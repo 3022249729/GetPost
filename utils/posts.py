@@ -8,7 +8,6 @@ def create_post(db, request):
     auth_token = request.cookies.get("auth_token")
     if not auth_token:
         return 403
-    
     body = request.body.decode()
     content = json.loads(body)
 
@@ -54,3 +53,4 @@ def get_post(db):
         posts_list.append(post)
 
     return json.dumps(posts_list)
+

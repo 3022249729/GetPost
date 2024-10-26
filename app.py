@@ -5,6 +5,7 @@ from utils.posts import get_post, create_post, delete_post
 import hashlib
 import secrets
 import bcrypt
+from utils.posts import get_post, create_post
 
 app = Flask(__name__)
 
@@ -18,36 +19,25 @@ else:
     print('database not connected')
 credential_collection = db["credential"]
 
+
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
-        username, password = extract_credentials(request)
-        response = (
-            "HTTP/1.1 302 Found\r\n"
-            "Location: /\r\n"
-            "Content-Type: text/html; charset=utf-8\r\n\r\n"
-        ).encode('utf-8')
-
+        username = request.form.get('username')
+        password = request.form.get('password')
+        response = make_response(redirect(url_for('home')))
         user = credential_collection.find_one({"username": username})
         if user is None or not bcrypt.checkpw(password.encode('utf-8'), user['password_hash']):
             return response
 
         auth_token = secrets.token_hex(16)
-        hash_auth_token = hashlib.sha256(auth_token.encode('utf-8')).digest()
-        xsrf_token = secrets.token_hex(16)
+        hash_auth_token = hashlib.sha256(auth_token.encode('utf-8')).hexdigest()
         credential_collection.update_one(
             {"username": username},
-            {"$set": {"auth_token": hash_auth_token, "xsrf_token": xsrf_token}}
+            {"$set": {"auth_token": hash_auth_token}}
         )
-
-        response_with_cookie = (
-            "HTTP/1.1 302 Found\r\n"
-            "Location: /\r\n"
-            f"Set-Cookie: auth_token={auth_token}; HttpOnly; Max-Age=3600; Path=/\r\n"
-            f"Set-Cookie: xsrf_token={xsrf_token}; HttpOnly; Max-Age=3600; Path=/\r\n"
-            "Content-Type: text/html; charset=utf-8\r\n\r\n"
-        ).encode('utf-8')
-        return response_with_cookie
+        response.set_cookie('auth_token', hash_auth_token, httponly=True, max_age=3600)
+        return response
     if request.method == 'GET':
         response = make_response(render_template('login.html'))
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -57,25 +47,20 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # Extract the username and passwords from the request
         username = request.form.get('username')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
-
-        # Validate input
         if not username:
             flash("Username cannot be empty", "error")
-            return render_template('home_page.html')  # Stay on home page
         if not password:
             flash("Password cannot be empty", "error")
-            return render_template('home_page.html')  # Stay on home page
         if not confirm_password:
             flash("Confirm password cannot be empty", "error")
-            return render_template('home_page.html')  # Stay on home page
 
         if password != confirm_password:
             flash("Passwords do not match", "error")
             return render_template('home_page.html')  # Stay on home page
+
 
         if not validate_password(password):
             flash("Password invalid", "error")
@@ -93,9 +78,8 @@ def register():
             "password_hash": hashed_password
         })
         flash("Registration successful! You can now log in.", "success")
+        return redirect(url_for('login'))
 
-        # Render the home page with a success message
-        return render_template('home_page.html')  # Stay on home page
 
     # GET request
     return render_template('home_page.html')  # Render home page
@@ -107,6 +91,7 @@ def logout():
     response.set_cookie('auth_token', '', expires=0)  # Invalidate the auth token
     flash("You have been logged out.", "success")
     return response
+
 
 @app.route('/', methods=['GET'])
 def home():
@@ -120,11 +105,11 @@ def home():
     if not user:
         return redirect(url_for("login"), 302)
     #if using invalid auth_token, redirect back to login
-    
     response = make_response(render_template('home_page.html'))
     response.mimetype = "text/html"
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
+
 
 @app.route('/posts', methods=['GET','POST'])
 def posts():
@@ -135,7 +120,6 @@ def posts():
         response.mimetype = "application/json"
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
-    
     if request.method == 'POST':
         code = create_post(request)
         if code == 403:
