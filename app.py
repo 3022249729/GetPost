@@ -1,7 +1,5 @@
 from flask import Flask, render_template, make_response, request, redirect, url_for, flash
-import hashlib
-import secrets
-import bcrypt
+import hashlib, secrets, bcrypt
 from utils.db import connect_db
 from utils.login import extract_credentials, validate_password
 from utils.posts import get_post, create_post
