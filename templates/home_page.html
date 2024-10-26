@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title> 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/home_page.css')}}">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home_page.css') }}">
 </head>
 
-<body onload="updateHome()">
-    <h1>Welcome, {{ session['username'] }}</h1>
-    <a href="{{ url_for('create_post') }}">Create a new post</a>
-    <a href="{{ url_for('logout') }}">Logout</a>
+
 
     <h2>Posts</h2>
     <div id="postsContainer"> <!-- This is the container for posts -->
