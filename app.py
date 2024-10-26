@@ -52,26 +52,27 @@ def login():
 def register():
     if request.method == 'POST':
         username, password, confirm_password= extract_credentials(request)
-        if not username :
-            print("user")
-        if not password :
-            print("pass")
+        if not username:
+            flash("Username cannot be empty", "error")
+            return redirect(url_for('register'))
+        if not password:
+            flash("Password cannot be empty", "error")
+            return redirect(url_for('register'))
         if not confirm_password:
-            print("confirm_pass")
-        response = (
-            "HTTP/1.1 302 Found\r\n"
-            "Location: /home\r\n"
-            "Content-Type: text/html; charset=utf-8\r\n\r\n"
-        ).encode('utf-8')
+            flash("Confirm password cannot be empty", "error")
+            return redirect(url_for('register'))
+
+
         if not validate_password(password):
             flash("Password invalid", "error")
-            return response
+            return redirect(url_for('register'))
         if credential_collection.find_one({"username": username}):
-            flash("Username used", "error")
-            return response
+            flash("Username already taken", "error")
+            return redirect(url_for('register'))
         if password != confirm_password:
             flash("Confirm_password enter not the same as password", "error")
-            return response
+            return redirect(url_for('register'))
+
         # Hash the password with bcrypt and insert into database
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         credential_collection.insert_one({
@@ -79,13 +80,8 @@ def register():
             "password_hash": hashed_password
         })
         # Redirect response after successful registration ( should load to new page)
-        success_response = (
-            "HTTP/1.1 302 Found\r\n"
-            "Location: /login\r\n"
-            "Content-Type: text/html; charset=utf-8\r\n\r\n"
-        ).encode('utf-8')
         flash("Registration successful! You can now log in.", "success")
-        return success_response
+        return redirect(url_for('login'))  # Redirect to login page
 
     if request.method == 'GET':
         response = make_response(render_template('register.html'))
