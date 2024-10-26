@@ -1,9 +1,7 @@
 from flask import Flask, render_template, make_response,request,redirect,url_for,flash
 from utils.db import connect_db
 from utils.login import extract_credentials, validate_password
-import hashlib
-import secrets
-import bcrypt
+import hashlib, secrets, bcrypt
 
 app = Flask(__name__)
 db = connect_db()
