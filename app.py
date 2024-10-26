@@ -1,30 +1,96 @@
-from flask import Flask, request, render_template, make_response
+from flask import Flask, render_template, make_response, request, redirect, url_for, flash
+import hashlib
+import secrets
+import bcrypt
 from utils.db import connect_db
+from utils.login import extract_credentials, validate_password
 from utils.posts import get_post, create_post
 
 app = Flask(__name__)
-
 db = connect_db()
 if db is not None:
-    print('databse connected successfully')
-    # app.logger.info('databse connected successfully')
+    print('database connect successfully')
 else:
-    print('databse not connected')
-    # app.logger.info('databse not connected')
+    print('database not connected')
+credential_collection = db["credential"]
 
 @app.route('/login', methods=['GET','POST'])
 def login():
+    if request.method == 'POST':
+        username, password = extract_credentials(request)
+        response = (
+            "HTTP/1.1 302 Found\r\n"
+            "Location: /\r\n"
+            "Content-Type: text/html; charset=utf-8\r\n\r\n"
+        ).encode('utf-8')
+
+        user = credential_collection.find_one({"username": username})
+        if user is None or not bcrypt.checkpw(password.encode('utf-8'), user['password_hash']):
+            return response
+
+        auth_token = secrets.token_hex(16)
+        hash_auth_token = hashlib.sha256(auth_token.encode('utf-8')).digest()
+        xsrf_token = secrets.token_hex(16)
+        credential_collection.update_one(
+            {"username": username},
+            {"$set": {"auth_token": hash_auth_token, "xsrf_token": xsrf_token}}
+        )
+
+        response_with_cookie = (
+            "HTTP/1.1 302 Found\r\n"
+            "Location: /\r\n"
+            f"Set-Cookie: auth_token={auth_token}; HttpOnly; Max-Age=3600; Path=/\r\n"
+            f"Set-Cookie: xsrf_token={xsrf_token}; HttpOnly; Max-Age=3600; Path=/\r\n"
+            "Content-Type: text/html; charset=utf-8\r\n\r\n"
+        ).encode('utf-8')
+        return response_with_cookie
     if request.method == 'GET':
         response = make_response(render_template('login.html'))
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
-        #respond with the html
+
+@app.route('/register', methods=['GET','POST'])
+def register():
     if request.method == 'POST':
-        #do post implementation
-        pass
+        username, password, confirm_password= extract_credentials(request)
+        if not username:
+            flash("Username cannot be empty", "error")
+            return redirect(url_for('register'))
+        if not password:
+            flash("Password cannot be empty", "error")
+            return redirect(url_for('register'))
+        if not confirm_password:
+            flash("Confirm password cannot be empty", "error")
+            return redirect(url_for('register'))
 
 
-@app.route('/', methods=['GET'])
+        if not validate_password(password):
+            flash("Password invalid", "error")
+            return redirect(url_for('register'))
+        if credential_collection.find_one({"username": username}):
+            flash("Username already taken", "error")
+            return redirect(url_for('register'))
+        if password != confirm_password:
+            flash("Confirm_password enter not the same as password", "error")
+            return redirect(url_for('register'))
+
+        # Hash the password with bcrypt and insert into database
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        credential_collection.insert_one({
+            "username": username,
+            "password_hash": hashed_password
+        })
+        # Redirect response after successful registration ( should load to new page)
+        flash("Registration successful! You can now log in.", "success")
+        return redirect(url_for('login'))  # Redirect to login page
+
+    if request.method == 'GET':
+        response = make_response(render_template('register.html'))
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
+
+
+@app.route('/home', methods=['GET'])
 def home():
     response = make_response(render_template('home_page.html'))
     response.mimetype = "text/html"
