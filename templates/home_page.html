@@ -6,37 +6,24 @@
     <title>Home Page</title> 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home_page.css')}}">
 </head>
+
 <body onload="updateHome()">
     <h1>Welcome, {{ session['username'] }}</h1>
     <a href="{{ url_for('create_post') }}">Create a new post</a>
-    <a href="{{ url_for('logout')  }}">Logout</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
 
     <h2>Posts</h2>
-    {% for post in posts %}
-    <div class="post">
-        <h3>{{ post['title'] }}</h3>
-        <p>{{ post['content'] }}</p>
-        <p>By: {{ post['author'] }}</p>
-        <p>Likes: {{post['likes'] | length }}</p>
-        <a href="{{ url_for('like_post', post_id=post['_id']) }}">Like</a>
-
-        <h4>Comments</h4>
-        {% for comment in post['comments'] %}
-        <p>{{ comment['username'] }}: {{ comment['text'] }}</p>
-        {$ endfor $}
-
-        <form action="{{ url_for('comment_post', post_id=post['_id']) }}" method="POST">
-            <input type = "text" name="comment" placeholder="Add a comment" required>
-            <button type="submit">Comment</button>
-        </form>
+    <div id="postsContainer"> <!-- This is the container for posts -->
+        <!-- Posts will be dynamically inserted here -->
     </div>
+
     <div class="container">
         <h1>Home Page</h1>
-        <p>go to every where from here</p>
+        <p>Go everywhere from here</p>
         <a href="/login">Login to Your Account</a>
     </div>
     <hr>
-    {$ endfor $}
-<script src="{{ url_for('static', filename='functions.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='functions.js') }}"></script>
 </body>
 </html>
