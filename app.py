@@ -1,14 +1,29 @@
-from flask import Flask, render_template, make_response
+from flask import Flask, render_template, make_response,request,redirect,url_for
 from utils.db import connect_db
 
 app = Flask(__name__)
 
-@app.route('/login', methods=['GET'])
+@app.route('/login', methods=['GET','POST'])
 def login():
-    response = make_response(render_template('login.html'))
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    return response
+    if request.method == 'POST':
+        response = make_response(redirect(url_for('home')))
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
+    if request.method == 'GET':
+        response = make_response(render_template('login.html'))
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
 
+@app.route('/register', methods=['GET','POST'])
+def register():
+    if request.method == 'POST':
+        response = make_response(redirect(url_for('home')))
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
+    if request.method == 'GET':
+        response = make_response(render_template('register.html'))
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
 
 
 @app.route('/home', methods=['GET'])
