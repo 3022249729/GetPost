@@ -1,13 +1,16 @@
 from flask import Flask, render_template, make_response, request, redirect, url_for, flash
-import hashlib, secrets, bcrypt
 from utils.db import connect_db
 from utils.login import extract_credentials, validate_password
-from utils.posts import get_post, create_post
+from utils.posts import get_post, create_post, delete_post
+import hashlib
+import secrets
+import bcrypt
 
 app = Flask(__name__)
 
 secret_key = secrets.token_hex(32)
 app.secret_key = 'HOIiot895@#128&900adf(afsd0)_12hrgafsd'
+
 db = connect_db()
 if db is not None:
     print('database connect successfully')
@@ -107,6 +110,17 @@ def logout():
 
 @app.route('/', methods=['GET'])
 def home():
+    if "auth_token" not in request.cookies:
+        return redirect(url_for("login"), 302)
+    #if not logged in redirect back to login
+
+    auth_token = request.cookies.get("auth_token")
+    user_collection = db["credential"]
+    user = user_collection.find_one({"auth_token_hash":hashlib.sha256(auth_token.encode()).hexdigest()})
+    if not user:
+        return redirect(url_for("login"), 302)
+    #if using invalid auth_token, redirect back to login
+    
     response = make_response(render_template('home_page.html'))
     response.mimetype = "text/html"
     response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -115,7 +129,7 @@ def home():
 @app.route('/posts', methods=['GET','POST'])
 def posts():
     if request.method == 'GET':
-        posts = get_post()
+        posts = get_post(db)
         response = make_response()
         response.set_data(posts)
         response.mimetype = "application/json"
@@ -123,16 +137,33 @@ def posts():
         return response
     
     if request.method == 'POST':
-        create_post(request)
-        response = make_response()
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        return response
+        code = create_post(request)
+        if code == 403:
+            response = make_response("Permission Denied", 403)
+            response.mimetype = "text/plain"
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            return response  
+
+        elif code == 200:
+            response = make_response('', 200) 
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            return response  
         
 
 @app.route('/posts/<string:post_id>', methods=['DELETE'])
 def delete_posts(post_id):
-    #implement delete post
-    pass
+    code = delete_post(db, request, post_id)
+
+    if code == 403:
+        response = make_response("Permission Denied", 403)
+        response.mimetype = "text/plain"
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response  
+
+    elif code == 204:
+        response = make_response('', 204) 
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response  
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080, debug=True)
