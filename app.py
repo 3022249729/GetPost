@@ -107,7 +107,7 @@ def logout():
     flash("You have been logged out.", "success")
     return response
 
-@app.route('/home', methods=['GET'])
+@app.route('/', methods=['GET'])
 def home():
     response = make_response(render_template('home_page.html'))
     response.mimetype = "text/html"
