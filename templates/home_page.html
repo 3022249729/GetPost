@@ -6,7 +6,7 @@
     <title>Home Page</title> 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home_page.css')}}">
 </head>
-<body>
+<body onload="updateHome()">
 
 <div class="container">
     <h1>Home Page</h1>
@@ -14,5 +14,6 @@
     <a href="login.html">Login to Your Account</a> 
 </div>
 
+<script src="{{ url_for('static', filename='functions.js') }}"></script>
 </body>
 </html>
