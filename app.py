@@ -7,6 +7,9 @@ from utils.login import extract_credentials, validate_password
 from utils.posts import get_post, create_post
 
 app = Flask(__name__)
+
+secret_key = secrets.token_hex(32)
+app.secret_key = 'HOIiot895@#128&900adf(afsd0)_12hrgafsd'
 db = connect_db()
 if db is not None:
     print('database connect successfully')
@@ -49,30 +52,38 @@ def login():
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
 
-@app.route('/register', methods=['GET','POST'])
+
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username, password, confirm_password= extract_credentials(request)
+        # Extract the username and passwords from the request
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        # Validate input
         if not username:
             flash("Username cannot be empty", "error")
-            return redirect(url_for('register'))
+            return render_template('home_page.html')  # Stay on home page
         if not password:
             flash("Password cannot be empty", "error")
-            return redirect(url_for('register'))
+            return render_template('home_page.html')  # Stay on home page
         if not confirm_password:
             flash("Confirm password cannot be empty", "error")
-            return redirect(url_for('register'))
+            return render_template('home_page.html')  # Stay on home page
 
+        if password != confirm_password:
+            flash("Passwords do not match", "error")
+            return render_template('home_page.html')  # Stay on home page
 
         if not validate_password(password):
             flash("Password invalid", "error")
-            return redirect(url_for('register'))
+            return render_template('home_page.html')  # Stay on home page
+
+        # Check if the username is already taken
         if credential_collection.find_one({"username": username}):
             flash("Username already taken", "error")
-            return redirect(url_for('register'))
-        if password != confirm_password:
-            flash("Confirm_password enter not the same as password", "error")
-            return redirect(url_for('register'))
+            return render_template('home_page.html')  # Stay on home page
 
         # Hash the password with bcrypt and insert into database
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -80,15 +91,21 @@ def register():
             "username": username,
             "password_hash": hashed_password
         })
-        # Redirect response after successful registration ( should load to new page)
         flash("Registration successful! You can now log in.", "success")
-        return redirect(url_for('login'))  # Redirect to login page
 
-    if request.method == 'GET':
-        response = make_response(render_template('register.html'))
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        return response
+        # Render the home page with a success message
+        return render_template('home_page.html')  # Stay on home page
 
+    # GET request
+    return render_template('home_page.html')  # Render home page
+
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    response = make_response(redirect(url_for('home')))  # Redirect to home page after logout
+    response.set_cookie('auth_token', '', expires=0)  # Invalidate the auth token
+    flash("You have been logged out.", "success")
+    return response
 
 @app.route('/home', methods=['GET'])
 def home():
