@@ -1,11 +1,14 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, make_response
 from utils.db import connect_db
 
 app = Flask(__name__)
 
 @app.route('/login', methods=['GET'])
 def login():
-    return render_template('login.html')
+    response = make_response(render_template('login.html'))
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
+
 
 
 @app.route('/home', methods=['GET'])
@@ -15,7 +18,9 @@ def home():
         app.logger.info('databse connected successfully')
     else:
         app.logger.info('databse not connected')
-    return render_template('home_page.html')
+    response = make_response(render_template('home_page.html'))
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080, debug=True)
