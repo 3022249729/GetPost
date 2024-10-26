@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/post.css') }}">
+    <title>Create Post</title>
+</head>
+<body>
+    <h1>Create a New Post</h1>
+    <form method="POST">
+        <input type="text" name="title" placeholder="Title" required><br>
+        <textarea name="content" placeholder="Content" required></textarea><br>
+        <button type="submit">Post</button>
+    </form>
+    <a href="{{ url_for('home') }}">Back to Home</a>
+</body>
+</html>

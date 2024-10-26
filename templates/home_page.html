@@ -3,16 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title> 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/home_page.css')}}">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home_page.css') }}">
 </head>
-<body>
 
-<div class="container">
-    <h1>Home Page</h1>
-    <p>go to every where from here</p>
-    <a href="/login">Login to Your Account</a>
-</div>
 
+
+    <h2>Posts</h2>
+    <div id="postsContainer"> <!-- This is the container for posts -->
+        <!-- Posts will be dynamically inserted here -->
+    </div>
+
+    <div class="container">
+        <h1>Home Page</h1>
+        <p>Go everywhere from here</p>
+        <a href="/login">Login to Your Account</a>
+    </div>
+    <hr>
+
+    <script src="{{ url_for('static', filename='functions.js') }}"></script>
 </body>
 </html>

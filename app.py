@@ -1,6 +1,7 @@
-from flask import Flask, render_template, make_response,request,redirect,url_for,flash
+from flask import Flask, render_template, make_response, request, redirect, url_for, flash
 from utils.db import connect_db
 from utils.login import extract_credentials, validate_password
+from utils.posts import get_post, create_post, delete_post
 import hashlib
 import secrets
 import bcrypt
@@ -10,6 +11,7 @@ app = Flask(__name__)
 
 secret_key = secrets.token_hex(32)
 app.secret_key = 'HOIiot895@#128&900adf(afsd0)_12hrgafsd'
+
 db = connect_db()
 if db is not None:
     print('database connect successfully')
@@ -41,7 +43,8 @@ def login():
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
 
-@app.route('/register', methods=['GET','POST'])
+
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -54,15 +57,19 @@ def register():
         if not confirm_password:
             flash("Confirm password cannot be empty", "error")
 
+        if password != confirm_password:
+            flash("Passwords do not match", "error")
+            return render_template('home_page.html')  # Stay on home page
+
+
         if not validate_password(password):
             flash("Password invalid", "error")
-            return redirect(url_for('register'))
+            return render_template('home_page.html')  # Stay on home page
+
+        # Check if the username is already taken
         if credential_collection.find_one({"username": username}):
             flash("Username already taken", "error")
-            return redirect(url_for('register'))
-        if password != confirm_password:
-            flash("Confirm_password enter not the same as password", "error")
-            return redirect(url_for('register'))
+            return render_template('home_page.html')  # Stay on home page
 
         # Hash the password with bcrypt and insert into database
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -70,14 +77,12 @@ def register():
             "username": username,
             "password_hash": hashed_password
         })
-        # Redirect response after successful registration ( should load to new page)
         flash("Registration successful! You can now log in.", "success")
         return redirect(url_for('login'))
 
-    if request.method == 'GET':
-        response = make_response(render_template('register.html'))
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        return response
+
+    # GET request
+    return render_template('home_page.html')  # Render home page
 
 
 @app.route('/logout', methods=['GET'])
@@ -90,33 +95,60 @@ def logout():
 
 @app.route('/', methods=['GET'])
 def home():
+    if "auth_token" not in request.cookies:
+        return redirect(url_for("login"), 302)
+    #if not logged in redirect back to login
+
+    auth_token = request.cookies.get("auth_token")
+    user_collection = db["credential"]
+    user = user_collection.find_one({"auth_token_hash":hashlib.sha256(auth_token.encode()).hexdigest()})
+    if not user:
+        return redirect(url_for("login"), 302)
+    #if using invalid auth_token, redirect back to login
     response = make_response(render_template('home_page.html'))
     response.mimetype = "text/html"
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
 
-@app.route('/posts', methods=['GET', 'POST'])
+@app.route('/posts', methods=['GET','POST'])
 def posts():
     if request.method == 'GET':
-        posts = get_post()
+        posts = get_post(db)
         response = make_response()
         response.set_data(posts)
         response.mimetype = "application/json"
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
-
     if request.method == 'POST':
-        create_post(request)
-        response = make_response()
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        return response
+        code = create_post(request)
+        if code == 403:
+            response = make_response("Permission Denied", 403)
+            response.mimetype = "text/plain"
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            return response  
 
+        elif code == 200:
+            response = make_response('', 200) 
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            return response  
+        
 
 @app.route('/posts/<string:post_id>', methods=['DELETE'])
 def delete_posts(post_id):
-    # implement delete post
-    pass
+    code = delete_post(db, request, post_id)
+
+    if code == 403:
+        response = make_response("Permission Denied", 403)
+        response.mimetype = "text/plain"
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response  
+
+    elif code == 204:
+        response = make_response('', 204) 
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response  
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080, debug=True)
+
