@@ -99,9 +99,9 @@ def home():
     #if not logged in redirect back to login
 
     auth_token = request.cookies.get("auth_token")
-    # user = credential_collection.find_one({"auth_token_hash":hashlib.sha256(auth_token.encode()).hexdigest()})
-    # if not user:
-    #     return redirect(url_for("login"), 302)
+    user = credential_collection.find_one({"auth_token_hash":hashlib.sha256(auth_token.encode()).hexdigest()})
+    if not user:
+        return redirect(url_for("login"), 302)
     #if using invalid auth_token, redirect back to login
     response = make_response(render_template('home_page.html'))
     response.mimetype = "text/html"
