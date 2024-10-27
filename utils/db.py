@@ -1,10 +1,12 @@
 from pymongo import MongoClient
 
-db = None
-
 def connect_db():
-    global db
-    if db is None:
-        mongo_client = MongoClient("mongodb://mongo:27017/")
+    try:
+        mongo_client = MongoClient("mongodb://mongo:27017/", serverSelectionTimeoutMS=5000)
         db = mongo_client["cse312"]
-    return db
+        mongo_client.admin.command('ping')
+        print("Database connected successfully")
+        return db
+    except Exception as e:
+        print(f"Database connection failed: {e}")
+        return None
