@@ -28,18 +28,20 @@ def decode_percent_encoded(string):
 def extract_credentials(request):
     body = request.data.decode("utf-8")
     pair = body.split('&')
-    Credential = [None,None,None]
+    username = None
+    password = None
+
     for info in pair:
         if '=' not in info:
             continue
         key, value = info.split('=')
         if key == 'username':
-            Credential[0] = value
+            username = value
         elif key == 'password':
-            Credential[1] = decode_percent_encoded(value)
-        elif key == 'confirm_password':
-            Credential[2] = decode_percent_encoded(value)
-    return Credential
+            password = decode_percent_encoded(value)
+    
+    return username, password
+
 
 def validate_password(password):
     special_characters = {'!', '@', '#', '$', '%', '^', '&', '(', ')', '-', '_', '='}
