@@ -1,16 +1,3 @@
-import hashlib
-import secrets
-import bcrypt
-from pymongo import MongoClient
-from flask import Flask, render_template, request, redirect, flash
-
-app = Flask(__name__)
-app.secret_key = "secret_key"
-
-mongo_client = MongoClient("mongo")
-db = mongo_client["cse312"]
-credential_collection = db["credential"]
-
 def decode_percent_encoded(string):
     decoded_string = ''
     i = 0

@@ -8,9 +8,7 @@ import bcrypt
 from utils.posts import get_post, create_post
 
 app = Flask(__name__)
-
-secret_key = secrets.token_hex(32)
-app.secret_key = 'HOIiot895@#128&900adf(afsd0)_12hrgafsd'
+app.secret_key = secrets.token_hex(16)
 
 db = connect_db()
 if db is not None:
@@ -24,11 +22,12 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        response = make_response(redirect('/'))
         user = credential_collection.find_one({"username": username})
         if user is None or not bcrypt.checkpw(password.encode('utf-8'), user['password_hash']):
-            return response
+            flash("Invalid username/password", "error")
+            return redirect(url_for('login'))
 
+        response = make_response(redirect('/'))
         auth_token = secrets.token_hex(16)
         hash_auth_token = hashlib.sha256(auth_token.encode('utf-8')).hexdigest()
         credential_collection.update_one(
@@ -37,6 +36,7 @@ def login():
         )
         response.set_cookie('auth_token', auth_token, httponly=True, max_age=3600)
         return response
+    
     if request.method == 'GET':
         response = make_response(render_template('login.html'))
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -49,26 +49,21 @@ def register():
         username = request.form.get('username')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
-        if not username:
-            flash("Username cannot be empty", "error")
-        if not password:
-            flash("Password cannot be empty", "error")
-        if not confirm_password:
-            flash("Confirm password cannot be empty", "error")
 
+        # Check if passwords match
         if password != confirm_password:
             flash("Passwords do not match", "error")
-            return render_template('register.html')  # Stay on home page
+            return render_template('register.html')
 
-
+        # Check if password meets strength requirements
         if not validate_password(password):
-            flash("Password invalid", "error")
-            return render_template('register.html')  # Stay on home page
+            flash("Password does not meet the requirements:<br>- 8+ characters<br>- 1 lowercase letter<br>- 1 uppercase letter<br>- 1 special character: !,@,#,$,%,^,&,(,),-,_,=", "error")
+            return render_template('register.html')
 
         # Check if the username is already taken
         if credential_collection.find_one({"username": username}):
             flash("Username already taken", "error")
-            return render_template('register.html')  # Stay on home page
+            return render_template('register.html')
 
         # Hash the password with bcrypt and insert into database
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -76,12 +71,10 @@ def register():
             "username": username,
             "password_hash": hashed_password
         })
-        flash("Registration successful! You can now log in.", "success")
-        return redirect(url_for('login'), 302)
-
+        return redirect(url_for('login'))
 
     # GET request
-    return render_template('register.html')  # Render home page
+    return render_template('register.html')
 
 
 @app.route('/logout', methods=['GET'])
@@ -101,8 +94,11 @@ def home():
     auth_token = request.cookies.get("auth_token")
     user = credential_collection.find_one({"auth_token_hash":hashlib.sha256(auth_token.encode()).hexdigest()})
     if not user:
-        return redirect(url_for("login"), 302)
+        response = make_response(redirect(url_for("login"), 302))
+        response.set_cookie('auth_token', '', expires=0)
+        return response
     #if using invalid auth_token, redirect back to login
+
     response = make_response(render_template('home_page.html'))
     response.mimetype = "text/html"
     response.headers['X-Content-Type-Options'] = 'nosniff'
