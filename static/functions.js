@@ -3,7 +3,7 @@ function updateHome() {
     request.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
             const posts = JSON.parse(this.response);
-            const postsContainer = document.getElementById('postsContainer'); // Select the container
+            const postsContainer = document.getElementById('postsContainer');
 
             // Clear the existing posts
             postsContainer.innerHTML = ''; 
@@ -17,8 +17,8 @@ function updateHome() {
                     <h3>${post.title}</h3>
                     <p>${post.content}</p>
                     <p>By: ${post.author}</p>
-                    <p>Likes: ${post.likes.length}</p>
-                    <a href="/like/${post._id}">Like</a>
+                    <p>Likes: ${post.likes}</p>
+                    <a href="/like/${post.id}">Like</a>
                     <h4>Comments</h4>
                 `;
 
@@ -32,19 +32,18 @@ function updateHome() {
                 // Comment form
                 const commentForm = document.createElement('form');
                 commentForm.method = 'POST';
-                commentForm.action = `/comment/${post._id}`; // Assuming you handle comments at this endpoint
+                commentForm.action = `/comment/${post.id}`; // Adjusted to use 'id'
 
                 // Prevent default form submission for AJAX-style comment posting
                 commentForm.onsubmit = function (event) {
-                    event.preventDefault(); // Prevent default form submission
+                    event.preventDefault();
 
                     const formData = new FormData(commentForm);
                     const commentRequest = new XMLHttpRequest();
 
                     commentRequest.onreadystatechange = function () {
                         if (this.readyState === 4 && this.status === 200) {
-                            // Refresh the posts to show the new comment
-                            updateHome();
+                            updateHome(); // Refresh posts to show the new comment
                         }
                     };
 

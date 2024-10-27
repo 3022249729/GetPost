@@ -5,6 +5,7 @@ from utils.posts import get_post, create_post, delete_post
 import hashlib
 import secrets
 import bcrypt
+from bson import ObjectId
 from utils.posts import get_post, create_post
 
 app = Flask(__name__)
@@ -12,9 +13,9 @@ app.secret_key = secrets.token_hex(16)
 
 db = connect_db()
 if db is not None:
-    print('database connect successfully')
+    print('Database connected successfully')
 else:
-    print('database not connected')
+    print('Database not connected')
 credential_collection = db["credential"]
 
 @app.route('/login', methods=['GET','POST'])
@@ -115,7 +116,7 @@ def posts():
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
     if request.method == 'POST':
-        code = create_post(request)
+        code = create_post(db, request)
         if code == 403:
             response = make_response("Permission Denied", 403)
             response.mimetype = "text/plain"
@@ -142,6 +143,46 @@ def delete_posts(post_id):
         response = make_response('', 204) 
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response  
+    
+@app.route('/like/<string:post_id>', methods=['POST'])
+def like_post(post_id):
+    auth_token = request.cookies.get("auth_token")
+    if not auth_token:
+        return "Unauthorized HAHA", 403
+    
+    user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
+    if not user:
+        return "Unauthorized HAHAHAHAHAH", 403
+    
+    post_collection = db["posts"]
+    post_collection.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$inc": {"likes": 1}}
+    )
+    return '', 200
+
+@app.route('/comment/<string:post_id>', methods=['POST'])
+def add_comment(post_id):
+    auth_token = request.cookies.get("auth_token")
+    if not auth_token:
+        return "Unauthorized", 403
+
+    user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
+    if not user:
+        return "Unauthorized", 403
+
+    body = request.json  # Assuming the comment is sent in JSON format
+    comment_text = body.get('comment')
+    
+    if not comment_text:
+        return "Comment cannot be empty", 400
+
+    post_collection = db["posts"]
+    post_collection.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$push": {"comments": {"username": user["username"], "text": comment_text}}}
+    )
+    return '', 200
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080, debug=True)

@@ -6,7 +6,7 @@
 </head>
 <body>
     <h1>Create a New Post</h1>
-    <form method="POST">
+    <form method="POST" action="{{ url_for('create_post') }}">
         <input type="text" name="title" placeholder="Title" required><br>
         <textarea name="content" placeholder="Content" required></textarea><br>
         <button type="submit">Post</button>

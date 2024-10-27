@@ -6,14 +6,15 @@
     <title>Home Page</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home_page.css') }}">
 </head>
-
-
-
+<body>
     <h2>Posts</h2>
-    <div id="postsContainer"> <!-- This is the container for posts -->
+    <div id="postsContainer"> 
         <!-- Posts will be dynamically inserted here -->
     </div>
 
     <script src="{{ url_for('static', filename='functions.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', updateHome);
+    </script>
 </body>
 </html>
