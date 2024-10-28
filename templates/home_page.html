@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/home_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('serve_css', filename='home_page.css') }}">
 </head>
 
 <body onload="welcome();">
@@ -19,8 +19,8 @@
 
     </div>
 
-    <form action="{{ url_for('logout') }}" method="POST" style="display: inline;">
-        <button type="submit">Logout</button>
+    <form action="/logout" method="POST" style="display: inline;">
+        <button type="submit" class="logout">Logout</button>
     </form>
     
     <script src="{{ url_for('serve_js', filename='functions.js') }}"></script>

@@ -118,3 +118,22 @@ body {
     margin: 5px 0;
     align-self: flex-start;
 }
+
+.logout{
+    font-size: 12px;
+    margin-top: 12px;
+    top: 50%;
+    width: 80px;
+    border: 2px solid #adadad;
+    padding: 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    background-color: transparent;
+    color: #adadad;
+}
+
+
+.logout:hover {
+    background-color: #e2e2e2;
+    color: #424242;
+}

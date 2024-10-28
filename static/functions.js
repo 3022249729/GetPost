@@ -1,5 +1,9 @@
 let posts = {};
 
+function redirectToRegister() {
+    window.location.href = "/register";
+}
+
 function welcome() {
     document.addEventListener("keypress", function (event) {
         if (event.code === "Enter") {
@@ -24,7 +28,7 @@ function createNewPost() {
     const request = new XMLHttpRequest();
     request.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
-            updatePosts();
+            getPosts();
         }
     };
     const messageJSON = { "message": message };
