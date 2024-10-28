@@ -109,3 +109,12 @@ body {
 .post-like:hover {
     background-color: #e2e2e2;
 }
+
+#user{
+    width: 95%;
+    font-size: 14px;
+    color: #777;
+    padding: 10px;
+    margin: 5px 0;
+    align-self: flex-start;
+}

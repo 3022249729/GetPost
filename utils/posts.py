@@ -42,13 +42,19 @@ def delete_post(db, request, post_id):
     else:
         return 403
 
-def get_post(db):
+def get_post(db, request):
     post_collection = db["posts"]
+    user_collection = db["credential"]
+    auth_token = request.cookies.get("auth_token")
+    user = user_collection.find_one({"auth_token_hash":hashlib.sha256(auth_token.encode()).hexdigest()})
 
     posts_list = []
     posts = post_collection.find()
+
+
     for post in posts:
         posts_list.append({
+            "user": user["username"],
             "id": str(post["_id"]),
             "content": post["message"],
             "author": post["username"],

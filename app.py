@@ -112,7 +112,7 @@ def home():
         return redirect(url_for("login"), 302)
     #if not logged in redirect back to login
 
-    # db["posts"].delete_many({})
+    db["posts"].delete_many({})
     
     auth_token = request.cookies.get("auth_token")
     user = credential_collection.find_one({"auth_token_hash":hashlib.sha256(auth_token.encode()).hexdigest()})
@@ -122,7 +122,8 @@ def home():
         return response
     #if using invalid auth_token, redirect back to login
 
-    response = make_response(render_template('home_page.html'))
+    username = user['username']
+    response = make_response(render_template('home_page.html', username=username))
     response.mimetype = "text/html"
     return response
 
@@ -130,7 +131,7 @@ def home():
 @app.route('/posts', methods=['GET','POST'])
 def posts():
     if request.method == 'GET':
-        posts = get_post(db)
+        posts = get_post(db, request)
         response = make_response()
         response.set_data(posts)
         response.mimetype = "application/json"

@@ -10,6 +10,7 @@
 
 <body onload="welcome();">
     <div id="createPostContainer">
+        <div id="user">Welcome, {{ username }}!</div>
         <textarea id="postMessageInput" placeholder="Share your new CSE312 meme here..." required></textarea>
         <button id="postButton" onclick="createNewPost()">Post</button>
     </div>
