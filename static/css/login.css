@@ -11,54 +11,67 @@ body {
     margin: 0;
     flex-direction: column;
 }
+
 .title {
     font-size: 32px;
     margin-bottom: 20px;
     color: #333;
 }
+
 .login-container {
     background-color: white;
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
+
 h2 {
     text-align: center;
     margin-bottom: 20px;
 }
-input[type="text"], input[type="password"], button {
+
+input[type="text"],
+input[type="password"] {
     width: 100%;
-    padding: 12px; 
+    padding: 12px;
     margin: 10px 0;
     border-radius: 5px;
     box-sizing: border-box;
-}
-input[type="text"], input[type="password"] {
     border: 1px solid #ccc;
 }
+
 button {
-    background-color: #5cb85c;
-    color: white;
-    border: none;
+    margin-top: 12px;
+    width: 100%;
+    height: 36px;
+    border: 2px solid #adadad;
+    border-radius: 50px;
     cursor: pointer;
+    background-color: transparent;
+    color: #adadad;
+    margin-bottom: 12px;
 }
+
 button:hover {
-    background-color: #4cae4c;
+    background: #adadad;
+    color: #424242;
 }
+
 .footer {
     text-align: center;
-    margin-top: 10px;
 }
+
 .footer a {
-    text-decoration: none;
-    color: #5cb85c;
+    text-decoration: underline;
+    color: #585858;
 }
-.error-message, .success {
+
+.error-message {
     color: red;
     margin-top: 10px;
-    white-space: nowrap; 
-}
-.success {
-    color: green;
+    white-space: nowrap;
 }
