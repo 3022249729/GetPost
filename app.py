@@ -1,4 +1,4 @@
-from flask import Flask, render_template, make_response, request, redirect, url_for, flash
+from flask import Flask, render_template, make_response, request, redirect, url_for, flash, send_from_directory
 from utils.db import connect_db
 from utils.login import extract_credentials, validate_password
 from utils.posts import get_post, create_post, delete_post
@@ -16,6 +16,29 @@ if db is not None:
 else:
     print('Database not connected')
 credential_collection = db["credential"]
+
+
+@app.route('/css/<path:filename>', methods=['GET'])
+def serve_css(filename):
+    response = make_response(send_from_directory('static/css', filename))
+    return response
+
+@app.route('/js/<path:filename>', methods=['GET'])
+def serve_js(filename):
+    response = make_response(send_from_directory('static', filename))
+    return response
+
+@app.route('/images/<path:filename>', methods=['GET'])
+def serve_image(filename):
+    response = make_response(send_from_directory('static/images', filename))
+    return response
+#functions to serve static files
+
+@app.after_request
+def add_nosniff_header(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
+#function to add nosniff to every response
 
 @app.route('/login', methods=['GET','POST'])
 def login():
@@ -39,7 +62,6 @@ def login():
     
     if request.method == 'GET':
         response = make_response(render_template('login.html'))
-        response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
 
 
@@ -81,7 +103,6 @@ def register():
 def logout():
     response = make_response(redirect(url_for('home')))  # Redirect to home page after logout
     response.set_cookie('auth_token', '', expires=0)  # Invalidate the auth token
-    response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
 
@@ -97,14 +118,12 @@ def home():
     user = credential_collection.find_one({"auth_token_hash":hashlib.sha256(auth_token.encode()).hexdigest()})
     if not user:
         response = make_response(redirect(url_for("login"), 302))
-        response.headers['X-Content-Type-Options'] = 'nosniff'
         response.set_cookie('auth_token', '', expires=0)
         return response
     #if using invalid auth_token, redirect back to login
 
     response = make_response(render_template('home_page.html'))
     response.mimetype = "text/html"
-    response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
 
@@ -115,19 +134,16 @@ def posts():
         response = make_response()
         response.set_data(posts)
         response.mimetype = "application/json"
-        response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
     if request.method == 'POST':
         code = create_post(db, request)
         if code == 403:
             response = make_response("Permission Denied", 403)
             response.mimetype = "text/plain"
-            response.headers['X-Content-Type-Options'] = 'nosniff'
             return response  
 
         elif code == 200:
             response = make_response('', 200) 
-            response.headers['X-Content-Type-Options'] = 'nosniff'
             return response  
         
 
@@ -138,12 +154,10 @@ def delete_posts(post_id):
     if code == 403:
         response = make_response("Permission Denied", 403)
         response.mimetype = "text/plain"
-        response.headers['X-Content-Type-Options'] = 'nosniff'
         return response  
 
     elif code == 204:
-        response = make_response('', 204) 
-        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response = make_response('', 204)
         return response  
     
 @app.route('/like/<string:post_id>', methods=['POST'])
@@ -152,14 +166,12 @@ def like_post(post_id):
     if not auth_token:
         response = make_response("Permission Denied", 403)
         response.mimetype = "text/plain"
-        response.headers['X-Content-Type-Options'] = 'nosniff'
         return response  
     
     user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
     if not user:
         response = make_response("Permission Denied", 403)
         response.mimetype = "text/plain"
-        response.headers['X-Content-Type-Options'] = 'nosniff'
         return response  
     
     post_collection = db["posts"]
@@ -169,7 +181,6 @@ def like_post(post_id):
     )
 
     response = make_response("", 200)
-    response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
 

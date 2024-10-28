@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css')}}">
+    <link rel="stylesheet" href="{{ url_for('serve_css', filename='login_register.css') }}">
 </head>
 
 <body>
@@ -28,6 +28,6 @@
         </div>
     </div>
 
+    <script src="{{ url_for('serve_js', filename='functions.js') }}"></script>
 </body>
-
 </html>
