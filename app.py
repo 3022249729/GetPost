@@ -99,10 +99,18 @@ def register():
     return render_template('register.html')
 
 
-@app.route('/logout', methods=['GET'])
+@app.route('/logout', methods=['POST'])
 def logout():
-    response = make_response(redirect(url_for('home')))  # Redirect to home page after logout
-    response.set_cookie('auth_token', '', expires=0)  # Invalidate the auth token
+    auth_token = request.cookies.get('auth_token')
+    if auth_token:
+        credential_collection.update_one(
+            {"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()},
+            {"$set": {"auth_token_hash": None}}
+        )
+
+    response = make_response(redirect(url_for('login')))
+    response.set_cookie('auth_token', '', expires=0)
+    response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
 
