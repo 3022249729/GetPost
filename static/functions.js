@@ -108,7 +108,7 @@ function createPostHTML(postData) {
 
     const content = document.createElement("div");
     content.className = "post-content";
-    content.textContent = postData.content;
+    content.innerHTML = postData.content;
 
     const timestamp = document.createElement("div");
     timestamp.className = "post-timestamp";
