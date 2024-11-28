@@ -4,24 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
+    <title>Home</title>
     <link rel="stylesheet" href="{{ url_for('serve_css', filename='home_page.css') }}">
 </head>
 
 <body onload="welcome();">
+    <div id="navBar">
+        <div id="profileSection">
+            <img id="profilePicture" src="{{ url_for('serve_image', filename='j_laser.gif') }}" alt="Profile Picture">
+            <span id="profileName">{{ username }}</span>
+        </div>
+        <form action="/logout" method="POST">
+            <button type="submit" class="logout">Logout</button>
+        </form>
+    </div>
+
     <div id="createPostContainer">
-        <div id="user">Welcome, {{ username }}!</div>
         <textarea id="postMessageInput" placeholder="Share your new CSE312 meme here..." required></textarea>
         <button id="postButton" onclick="createNewPost()">Post</button>
     </div>
 
-    <div id="postsContainer">
-
-    </div>
-
-    <form action="/logout" method="POST" style="display: inline;">
-        <button type="submit" class="logout">Logout</button>
-    </form>
+    <div id="postsContainer"></div>
     
     <script src="{{ url_for('serve_js', filename='functions.js') }}"></script>
 </body>

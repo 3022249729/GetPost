@@ -33,7 +33,6 @@ def serve_js(filename):
 @app.route('/images/<path:filename>', methods=['GET'])
 def serve_image(filename):
     response = make_response(send_from_directory('static/images', filename))
-    response.mimetype = "image/jpeg"
     return response
 #functions to serve static files
 

@@ -8,7 +8,40 @@ body {
     flex-direction: column;
     align-items: center;
     margin: 0;
-    padding: 20px;
+}
+
+
+#navBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 80%;
+    max-width: 800px;
+    background-color: white;
+    padding: 8px 20px;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#profileSection {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#profilePicture {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#profileName {
+    font-size: 16px;
+    color: #333;
 }
 
 #createPostContainer {
@@ -16,20 +49,18 @@ body {
     flex-direction: column;
     align-items: center;
     width: 80%;
-    width: 800px;
+    max-width: 800px;
     background-color: white;
     padding: 20px;
     margin-top: 10px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    position: sticky;
     top: 0;
-    z-index: 10;
 }
 
 #createPostContainer textarea {
     width: 95%;
-    padding: 10px;
+    padding: 20px;
     margin: 5px 0;
     border-radius: 5px;
     border: 1px solid #ccc;
@@ -52,23 +83,22 @@ body {
     color: #424242;
 }
 
-.posts-container {
-    width: 100%;
-    width: 800px;
+#postsContainer {
+    width: 80%;
+    max-width: 800px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 20px;
 }
 
 .post-container {
     background-color: white;
     border-radius: 10px;
+    width: 100%;
+    max-width: 800px;
     padding: 20px;
     margin: 10px 0;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    width: 800px;
     overflow-wrap: break-word;
     word-wrap: break-word;
 }
@@ -121,8 +151,6 @@ body {
 
 .logout{
     font-size: 12px;
-    margin-top: 12px;
-    top: 50%;
     width: 80px;
     border: 2px solid #adadad;
     padding: 12px;
@@ -130,6 +158,7 @@ body {
     cursor: pointer;
     background-color: transparent;
     color: #adadad;
+    display: inline;
 }
 
 
