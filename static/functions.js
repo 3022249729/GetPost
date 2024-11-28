@@ -94,7 +94,7 @@ function updatePosts(serverPosts) {
 
 function addPostToContainer(messageJSON) {
     const postsContainer = document.getElementById("postsContainer");
-    postsContainer.insertAdjacentHTML("beforeend", createPostHTML(messageJSON));
+    postsContainer.insertAdjacentHTML("afterbegin", createPostHTML(messageJSON));
 }
 
 function createPostHTML(postData) {
