@@ -42,6 +42,7 @@ function getPosts() {
     const request = new XMLHttpRequest();
     request.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
+            console.log(JSON.parse(this.responseText))
             updatePosts(JSON.parse(this.responseText));
         }
     };
@@ -102,9 +103,23 @@ function createPostHTML(postData) {
     postContainer.className = "post-container";
     postContainer.id = postData.id;
 
+    const author = document.createElement("div");
+    author.className = "post-author";
+
+    const profilePicture = document.createElement("img");
+    profilePicture.className = "post-profile-picture";
+    profilePicture.src = `/images/${postData.author_pfp}`;
+    profilePicture.alt = `${postData.author}'s pfp`;
+
     const username = document.createElement("div");
     username.className = "post-username";
     username.textContent = postData.author;
+
+    author.appendChild(profilePicture);
+    author.appendChild(username);
+
+    author.setAttribute("onclick", `openAuthorModal(${JSON.stringify(postData.author_pfp)})`);
+
 
     const content = document.createElement("div");
     content.className = "post-content";
@@ -123,7 +138,7 @@ function createPostHTML(postData) {
     likeButton.setAttribute("onclick", `handleLike("${postData.id}")`);
 
     buttonsContainer.appendChild(likeButton);
-    postContainer.appendChild(username);
+    postContainer.appendChild(author);
     postContainer.appendChild(content);
     postContainer.appendChild(timestamp);
     postContainer.appendChild(buttonsContainer);
@@ -141,4 +156,69 @@ function handleLike(postId) {
     request.open("POST", `/like/${postId}`);
     request.setRequestHeader('Content-Type', 'application/json');
     request.send();
+}
+
+
+function openProfileModal() {
+    const modal = document.getElementById("profileModal");
+    modal.style.display = "block";
+}
+
+function closeProfileModal() {
+    const modal = document.getElementById("profileModal");
+    modal.style.display = "none";
+}
+
+function openAuthorModal(author_pfp) {
+    const modal = document.getElementById("authorModal");
+    const pfp = document.getElementById("authorpfp");
+
+    pfp.src = `/images/${author_pfp}`;
+    modal.style.display = "flex";
+}
+
+function closeAuthorModal() {
+    const modal = document.getElementById("authorModal");
+    const pfp = document.getElementById("authorpfp");
+
+    pfp.src = ``;
+    modal.style.display = "none";
+}
+
+function setProfilePicture(image) {
+    const request = new XMLHttpRequest();
+    request.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+            window.location.reload();
+        }
+    };
+    request.open("POST", `/setpfp/${image}`);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.send();
+}
+
+function uploadProfilePicture(event) {
+    const file = event.target.files[0];
+    const formData = new FormData();
+    formData.append('pfp', file);
+
+    const request = new XMLHttpRequest();
+    request.onreadystatechange = function () {
+        if (request.readyState === 4) {
+            if (request.status === 200) {
+                const response = JSON.parse(request.responseText)
+                if (response.success) {
+                    window.location.reload();
+                } else {
+                    alert("Failed to upload profile picture.");
+                }
+            } else {
+                const response = JSON.parse(request.responseText)
+                alert(response.message);
+            }
+        }
+    };
+
+    request.open("POST", `/uploadpfp`);
+    request.send(formData);
 }

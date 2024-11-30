@@ -2,9 +2,11 @@ from flask import Flask, render_template, make_response, request, redirect, url_
 from utils.db import connect_db
 from utils.login import validate_password
 from utils.posts import get_post, create_post, delete_post
+from utils.upload import get_file_extension
 import hashlib
 import secrets
 import bcrypt
+import os
 from bson import ObjectId
 
 app = Flask(__name__)
@@ -113,7 +115,8 @@ def register():
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         credential_collection.insert_one({
             "username": username,
-            "password_hash": hashed_password
+            "password_hash": hashed_password,
+            "pfp": "default.png"
         })
         response = make_response(redirect(url_for('login')))
         response.mimetype = "text/html"
@@ -156,7 +159,11 @@ def home():
     #if using invalid auth_token, redirect back to login
 
     username = user['username']
-    response = make_response(render_template('home_page.html', username=username))
+    pfp = "default.png"
+    if "pfp" in user:
+        pfp = user["pfp"]
+
+    response = make_response(render_template('home_page.html', username=username, pfp=pfp))
     response.mimetype = "text/html"
     return response
 
@@ -219,6 +226,64 @@ def like_post(post_id):
     response = make_response("OK", 200)
     response.mimetype = "text/plain"
     return response
+
+@app.route('/setpfp/<string:image_name>', methods=['POST'])
+def setpfp(image_name):
+    auth_token = request.cookies.get("auth_token")
+    if not auth_token:
+        response = make_response("Permission Denied", 403)
+        response.mimetype = "text/plain"
+        return response  
+    
+    user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
+    if not user:
+        response = make_response("Permission Denied", 403)
+        response.mimetype = "text/plain"
+        return response 
+    #verify user
+    
+    credential_collection.update_one(
+        {"_id": ObjectId(user["_id"])},
+        {"$set": {"pfp": image_name}}
+    )
+
+    response = make_response("OK", 200)
+    response.mimetype = "text/html"
+    return response
+
+@app.route('/uploadpfp', methods=['POST'])
+def uploadpfp():
+    auth_token = request.cookies.get("auth_token")
+    if not auth_token:
+        response = make_response("Permission Denied", 403)
+        response.mimetype = "text/plain"
+        return response  
+    
+    user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
+    if not user:
+        response = make_response("Permission Denied", 403)
+        response.mimetype = "text/plain"
+        return response 
+    #verify user
+
+    file = request.files['pfp']
+    file_bytes = file.read()
+
+    extension = get_file_extension(file_bytes)
+    if extension == None or extension == "mp4":
+        return {'success': False, 'message': 'Unsupported file type.'}, 400
+    
+    filename = os.urandom(16).hex()
+    file_path = os.path.join("./static/images", f"{filename}.{extension}")
+    with open(file_path, 'wb') as f:
+        f.write(file_bytes)
+
+    credential_collection.update_one(
+        {"_id": ObjectId(user["_id"])},
+        {"$set": {"pfp": f"{filename}.{extension}"}}
+    )
+
+    return {'success': True}, 200
 
 
 if __name__ == "__main__":

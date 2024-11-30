@@ -10,8 +10,8 @@
 
 <body onload="welcome();">
     <div id="navBar">
-        <div id="profileSection">
-            <img id="profilePicture" src="{{ url_for('serve_image', filename='j_laser.gif') }}" alt="Profile Picture">
+        <div id="profileSection"  onclick="openProfileModal()">
+            <img id="profilePicture" src="{{ url_for('serve_image', filename=pfp) }}" alt="Profile Picture">
             <span id="profileName">{{ username }}</span>
         </div>
         <a href="/logout" class="logout">
@@ -26,6 +26,42 @@
     </div>
 
     <div id="postsContainer"></div>
+
+    <div id="profileModal" class="modal">
+        <div class="profile-modal-content">
+            <span class="close" onclick="closeProfileModal()">&times;</span>
+            <div id="change-message">Change Profile Picture</div>
+            <div class="preset-images">
+                <div class="preset" onclick="setProfilePicture('j_ironman.png')">
+                    <img src="{{ url_for('serve_image', filename='j_ironman.png') }}" alt="Preset 1">
+                </div>
+                <div class="preset" onclick="setProfilePicture('j_monalisa.png')">
+                    <img src="{{ url_for('serve_image', filename='j_monalisa.png') }}" alt="Preset 2">
+                </div>
+                <div class="preset" onclick="setProfilePicture('j_trump.png')">
+                    <img src="{{ url_for('serve_image', filename='j_trump.png') }}" alt="Preset 3">
+                </div>
+                <div class="preset" onclick="setProfilePicture('j_west.png')">
+                    <img src="{{ url_for('serve_image', filename='j_west.png') }}" alt="Preset 4">
+                </div>
+                <div class="preset" onclick="setProfilePicture('j_laser.gif')">
+                    <img src="{{ url_for('serve_image', filename='j_laser.gif') }}" alt="Preset 5">
+                </div>
+                <div class="preset upload-circle" onclick="document.getElementById('profileUpload').click()">
+                    <span>+</span>
+                </div>
+            </div>
+            <input type="file" id="profileUpload" accept="image/*" style="display: none;" onchange="uploadProfilePicture(event)">
+        </div>
+    </div>
+
+    <div id="authorModal" class="modal">
+        <div class="author-modal-content">
+            <span class="close-author-modal" onclick="closeAuthorModal()">&times;</span>
+            <img id="authorpfp" src="" alt="Profile Picture">
+        </div>
+    </div>
+    
     
     <script src="{{ url_for('serve_js', filename='functions.js') }}"></script>
 </body>

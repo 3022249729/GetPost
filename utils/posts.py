@@ -51,13 +51,18 @@ def get_post(db, request):
     posts_list = []
     posts = post_collection.find()
 
-
     for post in posts:
+        author = user_collection.find_one({"username":post["username"]})
+        author_pfp = "default.png"
+        if "pfp" in author:
+            author_pfp = author["pfp"]
+
         posts_list.append({
             "user": user["username"],
             "id": str(post["_id"]),
             "content": post["message"],
             "author": post["username"],
+            "author_pfp": author_pfp,
             "likes": post["likes"], 
             "comments": [{"username": k, "text": v} for k, v in post["comments"].items()],
             "timestamp": post["timestamp"].isoformat()
