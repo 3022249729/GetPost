@@ -1,9 +1,5 @@
 pymongo
 bcrypt
-<<<<<<< HEAD
-flask
-=======
 flask
 flask-socketio
 eventlet
->>>>>>> d8dadfd (websocket-liked-comments)
