@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 const ws = true;
 var socket;
->>>>>>> d8dadfd (websocket-liked-comments)
 let posts = {};
 
 function redirectToRegister() {
@@ -17,9 +14,6 @@ function welcome() {
     });
 
     getPosts();
-<<<<<<< HEAD
-    setInterval(getPosts, 3000); 
-=======
 
     if (ws) {
         initWS();
@@ -27,7 +21,6 @@ function welcome() {
         setInterval(getPosts, 3000);
     }
 
->>>>>>> d8dadfd (websocket-liked-comments)
 }
 
 function createNewPost() {
@@ -40,18 +33,6 @@ function createNewPost() {
         return;
     }
 
-<<<<<<< HEAD
-    const request = new XMLHttpRequest();
-    request.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            getPosts();
-        }
-    };
-    const messageJSON = { "message": message };
-    request.open("POST", "/posts");
-    request.setRequestHeader('Content-Type', 'application/json');
-    request.send(JSON.stringify(messageJSON));
-=======
     if (ws){
         socket.send(JSON.stringify({
             action: 'create_post',
@@ -69,7 +50,6 @@ function createNewPost() {
         request.setRequestHeader('Content-Type', 'application/json');
         request.send(JSON.stringify(messageJSON));
     }
->>>>>>> d8dadfd (websocket-liked-comments)
 }
 
 
@@ -166,16 +146,10 @@ function createPostHTML(postData) {
     const buttonsContainer = document.createElement("div");
     buttonsContainer.className = "buttons-container";
 
-<<<<<<< HEAD
-    const likeButton = document.createElement("button");
-    likeButton.className = "post-like";
-    likeButton.textContent = `❤️ Like (${postData.likes.length})`;
-=======
     const likesCount = Array.isArray(postData.likes) ? postData.likes.length : 0;
     const likeButton = document.createElement("button");
     likeButton.className = "post-like";
     likeButton.textContent = `❤️ Like (${likesCount})`;
->>>>>>> d8dadfd (websocket-liked-comments)
     likeButton.setAttribute("onclick", `handleLike("${postData.id}")`);
 
     buttonsContainer.appendChild(likeButton);
@@ -184,8 +158,6 @@ function createPostHTML(postData) {
     postContainer.appendChild(timestamp);
     postContainer.appendChild(buttonsContainer);
 
-<<<<<<< HEAD
-=======
     if (likesCount > 0) {
         const likedBy = document.createElement("div");
         likedBy.className = "post-likes-list"
@@ -194,22 +166,10 @@ function createPostHTML(postData) {
     }
 
 
->>>>>>> d8dadfd (websocket-liked-comments)
     return postContainer.outerHTML;
 }
 
 function handleLike(postId) {
-<<<<<<< HEAD
-    const request = new XMLHttpRequest();
-    request.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            getPosts();
-        }
-    };
-    request.open("POST", `/like/${postId}`);
-    request.setRequestHeader('Content-Type', 'application/json');
-    request.send();
-=======
     if (ws){
         socket.send(JSON.stringify({
             action: 'like_post',
@@ -226,7 +186,6 @@ function handleLike(postId) {
         request.setRequestHeader('Content-Type', 'application/json');
         request.send();
     }
->>>>>>> d8dadfd (websocket-liked-comments)
 }
 
 
@@ -292,9 +251,6 @@ function uploadProfilePicture(event) {
 
     request.open("POST", `/uploadpfp`);
     request.send(formData);
-<<<<<<< HEAD
-}
-=======
 }
 
 function initWS() {
@@ -335,4 +291,3 @@ function initWS() {
 
     });
 }
->>>>>>> d8dadfd (websocket-liked-comments)
