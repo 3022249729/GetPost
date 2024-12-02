@@ -287,7 +287,23 @@ function initWS() {
                 postContainer.appendChild(likedBy);
             }
         }
+    });
 
+    socket.on('unlike_post', function(data) {
+        console.log('Unlike post received, id:', data.post_id, 'like count:', data.like_count, 'liked by:', data.like_list);
+        const postContainer = document.getElementById(data.post_id);
+        if (postContainer) {
+            const likeButton = postContainer.querySelector('.post-like');
+            likeButton.textContent = `❤️ Like (${data.like_count})`;
 
+            postContainer.querySelector('.post-likes-list');
+
+            let likedBy = postContainer.querySelector('.post-likes-list');
+            if (data.like_list.length > 0){
+                likedBy.innerHTML = `Liked by: ${data.like_list.join(', ')}`;
+            } else {
+                likedBy.remove();
+            }
+        }
     });
 }

@@ -345,17 +345,30 @@ def handle_websocket_message(str_data):
                     "timestamp": time.isoformat()
                 }
                 socketio.emit('create_post', {'data': post})
+                return
 
             if action == 'like_post':
                 post_id = data["post_id"]
                 post_collection = db["posts"]
-                post_collection.update_one(
-                    {"_id": ObjectId(post_id)},
-                    {"$addToSet": {"likes": user["username"]}}
-                )
+
                 post = post_collection.find_one({"_id": ObjectId(post_id)})
-                like_count = len(post["likes"])
-                socketio.emit('like_post', {'post_id': post_id, 'like_count': like_count, 'like_list': post["likes"]})
+                if user["username"] in post["likes"]:
+                    post_collection.update_one(
+                        {"_id": ObjectId(post_id)},
+                        {"$pull": {"likes": user["username"]}}
+                    )
+                    post = post_collection.find_one({"_id": ObjectId(post_id)})
+                    like_count = len(post["likes"])
+                    socketio.emit('unlike_post', {'post_id': post_id, 'like_count': like_count, 'like_list': post["likes"]})
+                else:
+                    post_collection.update_one(
+                        {"_id": ObjectId(post_id)},
+                        {"$addToSet": {"likes": user["username"]}}
+                    )
+                    post = post_collection.find_one({"_id": ObjectId(post_id)})
+                    like_count = len(post["likes"])
+                    socketio.emit('like_post', {'post_id': post_id, 'like_count': like_count, 'like_list': post["likes"]})
+                return
 
 
 if __name__ == "__main__":
