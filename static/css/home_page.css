@@ -150,16 +150,17 @@ body {
 
 .post-like {
     margin-top: 8px;
-    width: 80px;
+    width: auto;
     height: 24px;
-    border: none;
-    background: #f7f7f7;
+    border: 1px;
+    background: #ffffff;
     color: #141414;
     font-size: 12px;
     border-radius: 12px;
     text-align: center;
     box-shadow: 0 6px 20px -5px rgba(0, 0, 0, 0.4);
     cursor: pointer;
+    padding: 0 8px;
 }
 
 .post-like:hover {
