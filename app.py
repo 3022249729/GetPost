@@ -369,6 +369,20 @@ def handle_websocket_message(str_data):
                     like_count = len(post["likes"])
                     socketio.emit('like_post', {'post_id': post_id, 'like_count': like_count, 'like_list': post["likes"]})
                 return
+            
+            if action == 'delete_post':
+                post_id = data["post_id"]
+                post_collection = db["posts"]
+
+                post = post_collection.find_one({"_id": ObjectId(post_id)})
+                if not post:
+                    return
+                
+                if user["username"] == post["username"]:
+                    post = post_collection.delete_one({"_id": ObjectId(post_id)})
+                    socketio.emit('delete_post', {'post_id': post_id})
+                return
+                
 
 
 if __name__ == "__main__":

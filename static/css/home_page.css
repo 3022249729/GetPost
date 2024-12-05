@@ -130,6 +130,22 @@ body {
     color: #555;
 }
 
+.delete-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.post-author-line{
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .post-content {
     font-size: 16px;
     color: #333;

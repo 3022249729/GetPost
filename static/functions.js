@@ -117,6 +117,9 @@ function createPostHTML(postData) {
     postContainer.className = "post-container";
     postContainer.id = postData.id;
 
+    const authorLine = document.createElement("div");
+    authorLine.className = "post-author-line";
+
     const author = document.createElement("div");
     author.className = "post-author";
 
@@ -131,9 +134,18 @@ function createPostHTML(postData) {
 
     author.appendChild(profilePicture);
     author.appendChild(username);
+    authorLine.appendChild(author)
+    if (postData.author === postData.user){
+        const delete_icon = document.createElement("img");
+        delete_icon.className = "delete-icon";
+        delete_icon.src = `/images/delete.svg`;
+        delete_icon.alt = `Delete post ${postData.id}`;
+        delete_icon.setAttribute("onclick", `handleDelete("${postData.id}")`);
+        authorLine.appendChild(delete_icon)
 
+    }
+    
     author.setAttribute("onclick", `openAuthorModal(${JSON.stringify(postData.author_pfp)})`);
-
 
     const content = document.createElement("div");
     content.className = "post-content";
@@ -153,7 +165,7 @@ function createPostHTML(postData) {
     likeButton.setAttribute("onclick", `handleLike("${postData.id}")`);
 
     buttonsContainer.appendChild(likeButton);
-    postContainer.appendChild(author);
+    postContainer.appendChild(authorLine);
     postContainer.appendChild(content);
     postContainer.appendChild(timestamp);
     postContainer.appendChild(buttonsContainer);
@@ -188,6 +200,24 @@ function handleLike(postId) {
     }
 }
 
+function handleDelete(postId) {
+    if (ws){
+        socket.send(JSON.stringify({
+            action: 'delete_post',
+            data: { post_id: postId }
+        }));
+    } else {
+        const request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                getPosts();
+            }
+        };
+        request.open("POST", `/delete/${postId}`);
+        request.setRequestHeader('Content-Type', 'application/json');
+        request.send();
+    }
+}
 
 function openProfileModal() {
     const modal = document.getElementById("profileModal");
@@ -305,5 +335,12 @@ function initWS() {
                 likedBy.remove();
             }
         }
+    });
+
+    socket.on('delete_post', function(data) {
+        console.log('Delete post received, id:', data.post_id);
+        const postContainer = document.getElementById(data.post_id);
+        postContainer.remove();
+        
     });
 }
