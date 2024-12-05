@@ -24,6 +24,15 @@
         </a>
     </div>
 
+    <div id="fontSizeControl">
+        <label>Font Size:</label>
+        <button onclick="setFontSize('small')">Small</button>
+        <button onclick="setFontSize('medium')">Medium</button>
+        <button onclick="setFontSize('large')">Large</button>
+        <button onclick="setFontSize('xlarge')">Extra Large</button>
+    </div>
+
+
     <div id="createPostContainer">
         <textarea id="postMessageInput" placeholder="Share your new CSE312 meme here..." required></textarea>
         <button id="postButton" onclick="createNewPost()">Post</button>

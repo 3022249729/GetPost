@@ -408,3 +408,20 @@ body.dark-mode .logout {
 body.dark-mode #createPostContainer textarea::placeholder {
     color: #ccc;
 }
+
+
+.font-small {
+    font-size: 12px;
+}
+
+.font-medium {
+    font-size: 16px;
+}
+
+.font-large {
+    font-size: 20px;
+}
+
+.font-xlarge {
+    font-size: 24px;
+}

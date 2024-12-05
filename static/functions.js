@@ -2,6 +2,8 @@ const ws = true;
 var socket;
 let posts = {};
 
+let currentFontSize = 'medium';
+
 function toggleDarkMode() {
     const isDarkMode = document.body.classList.toggle('dark-mode');
     localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
@@ -13,7 +15,6 @@ function initDarkMode() {
         document.body.classList.add('dark-mode');
     }
 }
-
 
 function welcome() {
     initDarkMode();
@@ -43,7 +44,6 @@ function addPostToContainer(messageJSON) {
         }
     }
 }
-
 
 function redirectToRegister() {
     window.location.href = "/register";
@@ -88,7 +88,7 @@ function createNewPost() {
                 getPosts();
             }
         };
-        const messageJSON = { "message": message };
+        const messageJSON = { "message": message, "fontSize": currentFontSize};
         request.open("POST", "/posts");
         request.setRequestHeader('Content-Type', 'application/json');
         request.send(JSON.stringify(messageJSON));
@@ -152,12 +152,16 @@ function updatePosts(serverPosts) {
 
 function addPostToContainer(messageJSON) {
     const postsContainer = document.getElementById("postsContainer");
-    postsContainer.insertAdjacentHTML("afterbegin", createPostHTML(messageJSON));
+    const fontSize = messageJSON.fontSize || currentFontSize;
+    messageJSON.fontSize = fontSize;
+    postsContainer.insertAdjacentHTML("afterbegin", createPostHTML(messageJSON,fontSize));
 }
 
 function createPostHTML(postData) {
     const postContainer = document.createElement("div");
-    postContainer.className = "post-container";
+
+    const fontSizeClass = `font-${postData.fontSize || currentFontSize}`;
+    postContainer.className = `post-container ${fontSizeClass}`;
     postContainer.id = postData.id;
 
     const authorLine = document.createElement("div");
@@ -191,7 +195,7 @@ function createPostHTML(postData) {
     author.setAttribute("onclick", `openAuthorModal(${JSON.stringify(postData.author_pfp)})`);
 
     const content = document.createElement("div");
-    content.className = "post-content";
+    content.className = `post-content ${fontSizeClass}`
     content.innerHTML = postData.content;
 
     const timestamp = document.createElement("div");
@@ -385,5 +389,14 @@ function initWS() {
         const postContainer = document.getElementById(data.post_id);
         postContainer.remove();
         
+    });
+}
+
+function setFontSize(size) {
+    currentFontSize = size;
+    const posts = document.querySelectorAll('.post-content');
+    posts.forEach(post => {
+        post.classList.remove('font-small', 'font-medium', 'font-large', 'font-xlarge');
+        post.classList.add(`font-${size}`);
     });
 }
