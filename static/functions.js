@@ -19,12 +19,15 @@ function initDarkMode() {
 function welcome() {
     initDarkMode();
 
-    document.addEventListener("keypress", function (event) {
-        if (event.code === "Enter") {
+    const postMessageInput = document.getElementById("postMessageInput");
+
+    document.addEventListener("keydown", function (event) {
+        if (event.code === "Enter" && document.activeElement === postMessageInput) {
+            event.preventDefault();
             createNewPost();
         }
-    });
-
+    })
+    
     getPosts();
 
     if (ws) {
@@ -49,22 +52,7 @@ function redirectToRegister() {
     window.location.href = "/register";
 }
 
-function welcome() {
-    document.addEventListener("keypress", function (event) {
-        if (event.code === "Enter") {
-            createNewPost();
-        }
-    });
 
-    getPosts();
-
-    if (ws) {
-        initWS();
-    } else {
-        setInterval(getPosts, 3000);
-    }
-
-}
 
 function createNewPost() {
     const postMessageInput = document.getElementById("postMessageInput");

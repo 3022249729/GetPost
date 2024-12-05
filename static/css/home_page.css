@@ -71,6 +71,10 @@ body {
     border: 1px solid #ccc;
 }
 
+#createPostContainer textarea:focus {
+    outline: none; 
+  }
+
 #createPostContainer button {
     margin-top: 12px;
     top: 50%;
@@ -351,6 +355,11 @@ body {
     font-size: 20px;
 }
 
+#darkModeToggle{
+    display: flex;
+    align-items: center;
+}
+
 body.dark-mode {
     background-color: grey;
     color: white;
@@ -360,6 +369,7 @@ body.dark-mode {
 body.dark-mode #navBar {
     background-color: #444;
     color: white;
+    border: none;
 }
 
 body.dark-mode #createPostContainer,
@@ -382,6 +392,9 @@ body.dark-mode button {
     color: white;
 }
 
+body.dark-mode .post-likes-list {
+    color: #ccc;
+}
 
 body.dark-mode .post-content {
     color: white;
@@ -405,10 +418,20 @@ body.dark-mode .logout {
     border-color: white;
 }
 
+
+body.dark-mode .logout-icon, 
+body.dark-mode .delete-icon{
+    filter: invert(1);
+}
+
 body.dark-mode #createPostContainer textarea::placeholder {
     color: #ccc;
 }
 
+body.dark-mode #fontSizeDropdown{
+    background-color: #444;
+    color: white;
+}
 
 .font-small {
     font-size: 12px;
@@ -425,3 +448,11 @@ body.dark-mode #createPostContainer textarea::placeholder {
 .font-xlarge {
     font-size: 24px;
 }
+
+#fontSizeDropdown {
+    border: 0px;
+  }
+
+#fontSizeDropdown:focus {
+    outline: none; 
+  }
