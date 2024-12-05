@@ -10,6 +10,10 @@
 
 <body onload="welcome();">
     <div id="navBar">
+        <div id="darkModeToggle">
+            <label for="darkModeCheckbox">Dark Mode</label>
+            <input type="checkbox" id="darkModeCheckbox" onclick="toggleDarkMode()">
+        </div>
         <div id="profileSection"  onclick="openProfileModal()">
             <img id="profilePicture" src="{{ url_for('serve_image', filename=pfp) }}" alt="Profile Picture">
             <span id="profileName">{{ username }}</span>

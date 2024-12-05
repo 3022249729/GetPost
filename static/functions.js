@@ -2,6 +2,49 @@ const ws = true;
 var socket;
 let posts = {};
 
+function toggleDarkMode() {
+    const isDarkMode = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+}
+
+function initDarkMode() {
+    const darkModeState = localStorage.getItem('darkMode');
+    if (darkModeState === 'enabled') {
+        document.body.classList.add('dark-mode');
+    }
+}
+
+
+function welcome() {
+    initDarkMode();
+
+    document.addEventListener("keypress", function (event) {
+        if (event.code === "Enter") {
+            createNewPost();
+        }
+    });
+
+    getPosts();
+
+    if (ws) {
+        initWS();
+    } else {
+        setInterval(getPosts, 3000);
+    }
+}
+
+function addPostToContainer(messageJSON) {
+    const postsContainer = document.getElementById("postsContainer");
+    postsContainer.insertAdjacentHTML("afterbegin", createPostHTML(messageJSON));
+    if (document.body.classList.contains('dark-mode')) {
+        const postElement = document.getElementById(messageJSON.id);
+        if (postElement) {
+            postElement.classList.add('dark-mode');
+        }
+    }
+}
+
+
 function redirectToRegister() {
     window.location.href = "/register";
 }

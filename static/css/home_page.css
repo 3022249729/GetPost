@@ -351,3 +351,60 @@ body {
     font-size: 20px;
 }
 
+body.dark-mode {
+    background-color: grey;
+    color: white;
+    background-image: none; /* Remove background image in dark mode */
+}
+
+body.dark-mode #navBar {
+    background-color: #444;
+    color: white;
+}
+
+body.dark-mode #createPostContainer,
+body.dark-mode .post-container,
+body.dark-mode .profile-modal-content,
+body.dark-mode .author-modal-content {
+    background-color: #555;
+    color: white;
+    border-color: #666;
+}
+
+body.dark-mode textarea {
+    background-color: #666;
+    color: white;
+    border-color: #777;
+}
+
+body.dark-mode button {
+    background-color: #777;
+    color: white;
+}
+
+
+body.dark-mode .post-content {
+    color: white;
+}
+
+body.dark-mode .post-username {
+    color: white;
+}
+
+body.dark-mode .post-timestamp {
+    color: #ccc;
+}
+
+body.dark-mode #profileName {
+    color: white;
+}
+
+body.dark-mode .logout {
+    color: white;
+    background-color: transparent;
+    border-color: white;
+}
+
+body.dark-mode #createPostContainer textarea::placeholder {
+    color: #ccc;
+}
