@@ -3,7 +3,7 @@ import eventlet
 eventlet.monkey_patch()
 
 from flask import Flask, render_template, make_response, request, redirect, url_for, flash, send_from_directory
-from flask_socketio import SocketIO, send, emit
+from flask_socketio import SocketIO, disconnect, emit
 from utils.db import connect_db
 from utils.login import validate_password
 from utils.posts import get_post, create_post, delete_post
@@ -296,14 +296,19 @@ def setpfp(image_name):
         return response
         # verify user
 
+    if ".." in image_name or "/" in image_name:
+        return {'success': False, 'message': 'Invalid profile picture name.'}, 400
+    
+    file_path = os.path.join("static/images", image_name)
+    if not os.path.isfile(file_path):
+        return {'success': False, 'message': 'Invalid profile picture name.'}, 400
+    
     credential_collection.update_one(
         {"_id": ObjectId(user["_id"])},
         {"$set": {"pfp": image_name}}
     )
 
-    response = make_response("OK", 200)
-    response.mimetype = "text/html"
-    return response
+    return {'success': True}, 200
 
 
 @app.route('/uploadpfp', methods=['POST'])
@@ -415,6 +420,10 @@ def handle_websocket_message(str_data):
                     post = post_collection.delete_one({"_id": ObjectId(post_id)})
                     socketio.emit('delete_post', {'post_id': post_id})
                 return
+            
+        socketio.emit('unauthorized', {'message': 'Session expired/invalid token, please login again.'}, to=request.sid)
+        disconnect()
+        return
                 
 
 

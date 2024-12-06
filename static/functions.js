@@ -27,7 +27,7 @@ function welcome() {
             createNewPost();
         }
     })
-    
+
     getPosts();
 
     if (ws) {
@@ -281,10 +281,21 @@ function closeAuthorModal() {
 }
 
 function setProfilePicture(image) {
+    console.log(image)
     const request = new XMLHttpRequest();
     request.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            window.location.reload();
+        if (request.readyState === 4) {
+            if (request.status === 200) {
+                const response = JSON.parse(request.responseText)
+                if (response.success) {
+                    window.location.reload();
+                } else {
+                    alert("Failed to set profile picture.");
+                }
+            } else {
+                const response = JSON.parse(request.responseText)
+                alert(response.message);
+            }
         }
     };
     request.open("POST", `/setpfp/${image}`);
@@ -377,6 +388,12 @@ function initWS() {
         const postContainer = document.getElementById(data.post_id);
         postContainer.remove();
         
+    });
+
+    socket.on('unauthorized', function(data) {
+        socket.disconnect();
+        alert(data.message);
+        window.location.reload();
     });
 }
 
