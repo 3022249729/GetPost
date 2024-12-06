@@ -451,6 +451,8 @@ body.dark-mode #fontSizeDropdown{
 
 #fontSizeDropdown {
     border: 0px;
+    background-color: white;
+    color: black;
   }
 
 #fontSizeDropdown:focus {

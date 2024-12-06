@@ -33,6 +33,17 @@ credential_collection = db["credential"]
 
 @app.route('/css/<path:filename>', methods=['GET'])
 def serve_css(filename):
+    if ".." in filename or "/" in filename:
+        response = make_response("404 NOT FOUND", 404)
+        response.mimetype = "text/html"
+        return response
+    
+    file_path = os.path.join("static/css", filename)
+    if not os.path.isfile(file_path):
+        response = make_response("404 NOT FOUND", 404)
+        response.mimetype = "text/html"
+        return response
+    
     response = make_response(send_from_directory('static/css', filename))
     response.mimetype = "text/css"
     return response
@@ -40,6 +51,17 @@ def serve_css(filename):
 
 @app.route('/js/<path:filename>', methods=['GET'])
 def serve_js(filename):
+    if ".." in filename or "/" in filename:
+        response = make_response("404 NOT FOUND", 404)
+        response.mimetype = "text/html"
+        return response
+    
+    file_path = os.path.join("static", filename)
+    if not os.path.isfile(file_path):
+        response = make_response("404 NOT FOUND", 404)
+        response.mimetype = "text/html"
+        return response
+    
     response = make_response(send_from_directory('static', filename))
     response.mimetype = "text/javascript"
     return response
@@ -47,6 +69,17 @@ def serve_js(filename):
 
 @app.route('/images/<path:filename>', methods=['GET'])
 def serve_image(filename):
+    if ".." in filename or "/" in filename:
+        response = make_response("404 NOT FOUND", 404)
+        response.mimetype = "text/html"
+        return response
+    
+    file_path = os.path.join("static/images", filename)
+    if not os.path.isfile(file_path):
+        response = make_response("404 NOT FOUND", 404)
+        response.mimetype = "text/html"
+        return response
+    
     response = make_response(send_from_directory('static/images', filename))
     return response
 
