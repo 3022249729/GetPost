@@ -197,7 +197,8 @@ body {
     align-self: flex-start;
 }
 
-.logout {
+.logout,
+#themeMode {
     display: flex;
     align-items: center;
     text-decoration: none;
@@ -210,7 +211,8 @@ body {
     gap: 8px;
 }
 
-.logout-icon {
+.logout-icon,
+#themeModeIcon {
     width: 20px;
     height: 20px;
 }
@@ -363,7 +365,7 @@ body {
 body.dark-mode {
     background-color: grey;
     color: white;
-    background-image: none; /* Remove background image in dark mode */
+    background-image: url('/images/background-dark.jpg');
 }
 
 body.dark-mode #navBar {
@@ -418,9 +420,16 @@ body.dark-mode .logout {
     border-color: white;
 }
 
+body.dark-mode #themeModeText {
+    color: white;
+    background-color: transparent;
+    border-color: white;
+}
+
 
 body.dark-mode .logout-icon, 
-body.dark-mode .delete-icon{
+body.dark-mode .delete-icon,
+body.dark-mode #themeModeIcon{
     filter: invert(1);
 }
 

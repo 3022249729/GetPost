@@ -114,7 +114,11 @@ def login():
             {"username": username},
             {"$set": {"auth_token_hash": hash_auth_token}}
         )
+
+        xsrf_token = hashlib.sha256(os.urandom(48)).hexdigest()
+        credential_collection.update_one({"_id": user["_id"]}, {"$set": {"xsrf_token": xsrf_token}})
         response.set_cookie('auth_token', auth_token, httponly=True, max_age=3600)
+        response.set_cookie('xsrf_token', xsrf_token, httponly=True, max_age=3600)
         response.mimetype = "text/html"
         return response
 
@@ -129,6 +133,7 @@ def login():
 
         response = make_response(render_template('login.html'))
         response.set_cookie('auth_token', '', expires=0)
+        response.set_cookie('xsrf_token', '', expires=0)
         response.mimetype = "text/html"
         return response
 
@@ -168,6 +173,7 @@ def register():
         credential_collection.insert_one({
             "username": username,
             "password_hash": hashed_password,
+            "xsrf_token": None,
             "pfp": "default.png"
         })
         response = make_response(redirect(url_for('login')))

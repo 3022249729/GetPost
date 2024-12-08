@@ -4,17 +4,61 @@ let posts = {};
 
 let currentFontSize = 'medium';
 
-function toggleDarkMode() {
-    const isDarkMode = document.body.classList.toggle('dark-mode');
-    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+function changeThemeMode() {
+    const img = document.getElementById('themeModeIcon');
+    const span = document.getElementById('themeModeText')
+    
+    const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
+
+    if (isDarkMode) {
+        img.src = "/images/dark-mode.svg";
+        span.textContent = "Dark Mode";
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('darkMode', 'disabled');
+    } else {
+        img.src = "/images/light-mode.svg";
+        span.textContent = "Light Mode";
+        document.body.classList.add('dark-mode'); 
+        localStorage.setItem('darkMode', 'enabled');
+    }
 }
 
 function initDarkMode() {
-    const darkModeState = localStorage.getItem('darkMode');
-    if (darkModeState === 'enabled') {
+    const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
+    const img = document.getElementById('themeModeIcon');
+    const span = document.getElementById('themeModeText')
+    
+    if (isDarkMode) {
         document.body.classList.add('dark-mode');
+        img.src = "/images/light-mode.svg";
+        span.textContent = "Light Mode";
+    } else {
+        img.src = "/images/dark-mode.svg";
+        span.textContent = "Dark Mode";
     }
 }
+
+function welcome() {
+    initDarkMode();
+
+    const postMessageInput = document.getElementById("postMessageInput");
+
+    document.addEventListener("keydown", function (event) {
+        if (event.code === "Enter" && document.activeElement === postMessageInput) {
+            event.preventDefault();
+            createNewPost();
+        }
+    });
+
+    getPosts();
+
+    if (ws) {
+        initWS();
+    } else {
+        setInterval(getPosts, 3000);
+    }
+}
+
 
 function welcome() {
     initDarkMode();
@@ -281,7 +325,6 @@ function closeAuthorModal() {
 }
 
 function setProfilePicture(image) {
-    console.log(image)
     const request = new XMLHttpRequest();
     request.onreadystatechange = function () {
         if (request.readyState === 4) {
@@ -300,6 +343,7 @@ function setProfilePicture(image) {
     };
     request.open("POST", `/setpfp/${image}`);
     request.setRequestHeader('Content-Type', 'application/json');
+    request.setRequestHeader('XSRF-TOKEN', 'application/json');
     request.send();
 }
 
