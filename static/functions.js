@@ -38,6 +38,20 @@ function initDarkMode() {
     }
 }
 
+function getXSRF() {
+    const cookies_string = document.cookie.replaceAll('; ', ';');
+    const cookies = cookies_string.split(';');
+    let xsrf_token;
+    for (const cookie of cookies) {
+        const [key, val] = cookie.split('=');
+        if (key === "xsrf_token") {
+            xsrf_token = val;
+            break;
+        }
+    } 
+    return xsrf_token
+}
+
 function welcome() {
     initDarkMode();
 
@@ -49,28 +63,6 @@ function welcome() {
             createNewPost();
         }
     });
-
-    getPosts();
-
-    if (ws) {
-        initWS();
-    } else {
-        setInterval(getPosts, 3000);
-    }
-}
-
-
-function welcome() {
-    initDarkMode();
-
-    const postMessageInput = document.getElementById("postMessageInput");
-
-    document.addEventListener("keydown", function (event) {
-        if (event.code === "Enter" && document.activeElement === postMessageInput) {
-            event.preventDefault();
-            createNewPost();
-        }
-    })
 
     getPosts();
 
@@ -325,6 +317,7 @@ function closeAuthorModal() {
 }
 
 function setProfilePicture(image) {
+    const xsrfToken = getXSRF();
     const request = new XMLHttpRequest();
     request.onreadystatechange = function () {
         if (request.readyState === 4) {
@@ -338,16 +331,23 @@ function setProfilePicture(image) {
             } else {
                 const response = JSON.parse(request.responseText)
                 alert(response.message);
+                if (request.status === 403){
+                    document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
+                    window.location.href = '/login'; 
+                } else {
+                    window.location.reload();
+                }
             }
         }
     };
     request.open("POST", `/setpfp/${image}`);
     request.setRequestHeader('Content-Type', 'application/json');
-    request.setRequestHeader('XSRF-TOKEN', 'application/json');
+    request.setRequestHeader('XSRF-TOKEN', xsrfToken);
     request.send();
 }
 
 function uploadProfilePicture(event) {
+    const xsrfToken = getXSRF();
     const file = event.target.files[0];
     const formData = new FormData();
     formData.append('pfp', file);
@@ -365,16 +365,29 @@ function uploadProfilePicture(event) {
             } else {
                 const response = JSON.parse(request.responseText)
                 alert(response.message);
+                if (request.status === 403){
+                    document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
+                    window.location.href = '/login'; 
+                } else {
+                    window.location.reload();
+                }
             }
         }
     };
 
     request.open("POST", `/uploadpfp`);
+    request.setRequestHeader('XSRF-TOKEN', xsrfToken);
     request.send(formData);
 }
 
 function initWS() {
-    socket = io();
+    const xsrfToken = getXSRF();
+    socket = io({
+        query: {
+            xsrf_token: xsrfToken,
+        },
+    });
+
     socket.on('connect', function() {
         console.log('WebSocket connected');
     });
@@ -437,7 +450,8 @@ function initWS() {
     socket.on('unauthorized', function(data) {
         socket.disconnect();
         alert(data.message);
-        window.location.reload();
+        document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
+        window.location.href = '/login'; 
     });
 }
 

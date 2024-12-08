@@ -15,8 +15,9 @@
             <span id="profileName">{{ username }}</span>
         </div>
         <div id="fontSizeControl">
-            <label for="fontSizeDropdown">Font Size:</label>
-            <select id="fontSizeDropdown" onchange="setFontSize(this.value)">
+            <label for="fontSizeDropdown" style="display: none;">Font Size:</label>
+            <img src="{{ url_for('serve_image', filename='font-size.svg') }}" alt="Font Size" class="font-icon">
+            <select id="fontSizeDropdown" onchange="setFontSize(this.value)" class="font-size-dropdown">
                 <option value="small">Small</option>
                 <option value="medium" selected>Medium</option>
                 <option value="large">Large</option>

@@ -198,6 +198,7 @@ body {
 }
 
 .logout,
+#fontSizeControl,
 #themeMode {
     display: flex;
     align-items: center;
@@ -212,6 +213,7 @@ body {
 }
 
 .logout-icon,
+.font-icon,
 #themeModeIcon {
     width: 20px;
     height: 20px;
@@ -429,6 +431,7 @@ body.dark-mode #themeModeText {
 
 body.dark-mode .logout-icon, 
 body.dark-mode .delete-icon,
+body.dark-mode .font-icon,
 body.dark-mode #themeModeIcon{
     filter: invert(1);
 }
@@ -462,8 +465,10 @@ body.dark-mode #fontSizeDropdown{
     border: 0px;
     background-color: white;
     color: black;
+    font-size: 16px;
   }
 
 #fontSizeDropdown:focus {
     outline: none; 
   }
+

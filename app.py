@@ -1,5 +1,4 @@
 import eventlet
-
 eventlet.monkey_patch()
 
 from flask import Flask, render_template, make_response, request, redirect, url_for, flash, send_from_directory
@@ -15,7 +14,7 @@ import os
 from bson import ObjectId
 import html
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 ws = True
 
@@ -110,21 +109,24 @@ def login():
         response = make_response(redirect('/'))
         auth_token = secrets.token_hex(16)
         hash_auth_token = hashlib.sha256(auth_token.encode('utf-8')).hexdigest()
+        expiry_time = datetime.now() + timedelta(hours=1)
         credential_collection.update_one(
             {"username": username},
-            {"$set": {"auth_token_hash": hash_auth_token}}
+            {"$set": {"auth_token_hash": hash_auth_token, "tokens_expiry": expiry_time}}
         )
 
         xsrf_token = hashlib.sha256(os.urandom(48)).hexdigest()
         credential_collection.update_one({"_id": user["_id"]}, {"$set": {"xsrf_token": xsrf_token}})
-        response.set_cookie('auth_token', auth_token, httponly=True, max_age=3600)
-        response.set_cookie('xsrf_token', xsrf_token, httponly=True, max_age=3600)
+        response.set_cookie('auth_token', auth_token, httponly=True, secure=True, max_age=3600)
+        response.set_cookie('xsrf_token', xsrf_token, secure=True, max_age=3600)
         response.mimetype = "text/html"
         return response
 
     if request.method == 'GET':
         auth_token = request.cookies.get('auth_token')
-        if auth_token:
+        xsrf_token = request.cookies.get('xsrf_token')
+        
+        if auth_token and xsrf_token:
             user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
             if user:
                 response = make_response(redirect('/'))
@@ -192,29 +194,32 @@ def logout():
     if auth_token:
         user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
         if user:
-            credential_collection.update_one({"_id": user["_id"]}, {"$set": {"auth_token_hash": None}})
+            credential_collection.update_one({"_id": user["_id"]}, {"$set": {"auth_token_hash": None, "xsrf_token":None}})
 
     response = make_response(redirect(url_for('login')))
     response.set_cookie('auth_token', '', expires=0)
+    response.set_cookie('xsrf_token', '', expires=0)
     return response
 
 
 @app.route('/', methods=['GET'])
 def home():
-    if "auth_token" not in request.cookies:
-        response = make_response(redirect(url_for("login"), 302))
-        response.mimetype = "text/html"
-        return response
-    # if not logged in redirect back to login
-
     auth_token = request.cookies.get("auth_token")
-    user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
-    if not user:
+    if not auth_token:
         response = make_response(redirect(url_for("login"), 302))
         response.set_cookie('auth_token', '', expires=0)
+        response.set_cookie('xsrf_token', '', expires=0)
         response.mimetype = "text/html"
         return response
-    # if using invalid auth_token, redirect back to login
+
+    user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
+    if not user or datetime.now() > user['tokens_expiry']:
+        response = make_response(redirect(url_for("login"), 302))
+        response.set_cookie('auth_token', '', expires=0)
+        response.set_cookie('xsrf_token', '', expires=0)
+        response.mimetype = "text/html"
+        return response
+        # verify user
 
     username = user['username']
     pfp = "default.png"
@@ -290,16 +295,13 @@ def like_post(post_id):
 @app.route('/setpfp/<string:image_name>', methods=['POST'])
 def setpfp(image_name):
     auth_token = request.cookies.get("auth_token")
-    if not auth_token:
-        response = make_response("Permission Denied", 403)
-        response.mimetype = "text/plain"
-        return response
+    xsrf_token = request.headers.get('XSRF-TOKEN')
+    if not auth_token or not xsrf_token:
+        return {'success': False, 'message': 'Session expired/invalid token, please login again.'}, 403
 
     user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
-    if not user:
-        response = make_response("Permission Denied", 403)
-        response.mimetype = "text/plain"
-        return response
+    if not user or xsrf_token != user["xsrf_token"] or datetime.now() > user['tokens_expiry']:
+        return {'success': False, 'message': 'Session expired/invalid token, please login again.'}, 403
         # verify user
 
     if ".." in image_name or "/" in image_name:
@@ -320,16 +322,13 @@ def setpfp(image_name):
 @app.route('/uploadpfp', methods=['POST'])
 def uploadpfp():
     auth_token = request.cookies.get("auth_token")
-    if not auth_token:
-        response = make_response("Permission Denied", 403)
-        response.mimetype = "text/plain"
-        return response
+    xsrf_token = request.headers.get('XSRF-TOKEN')
+    if not auth_token or not xsrf_token:
+        return {'success': False, 'message': 'Session expired/invalid token, please login again.'}, 403
 
     user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
-    if not user:
-        response = make_response("Permission Denied", 403)
-        response.mimetype = "text/plain"
-        return response
+    if not user or xsrf_token != user["xsrf_token"] or datetime.now() > user['tokens_expiry']:
+        return {'success': False, 'message': 'Session expired/invalid token, please login again.'}, 403
         # verify user
 
     file = request.files['pfp']
@@ -352,90 +351,109 @@ def uploadpfp():
     return {'success': True}, 200
 
 
+@socketio.on('connect')
+def handle_connect():
+    xsrf_token = request.args.get('xsrf_token')
+    auth_token = request.cookies.get("auth_token")
+
+    app.logger.info("connecting")
+    if not xsrf_token or not auth_token:
+        socketio.emit('unauthorized', {'message': 'Session expired/invalid token, please login again.'}, to=request.sid)
+        return 
+    
+    user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
+    if not user or xsrf_token != user["xsrf_token"]:
+        socketio.emit('unauthorized', {'message': 'Session expired/invalid token, please login again.'}, to=request.sid)
+        return
+        
+
 @socketio.on('message')
 def handle_websocket_message(str_data):
     json_data = json.loads(str_data)
     action = json_data.get('action')
 
     auth_token = request.cookies.get("auth_token")
-    if auth_token:
-        user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
-        if user:
-            data = json_data['data']
+    user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
 
-            if action == 'create_post':
-                escaped = html.escape(data["message"])
-                post_collection = db["posts"]
+    data = json_data['data']
 
-                time = datetime.now()
-                result = post_collection.insert_one(
-                    {"username": user["username"], "timestamp": time, "message": escaped, "attachments": [],
-                     "likes": [], "dislikes": [], "comments": {}})
-
-                inserted_id = result.inserted_id
-                author = credential_collection.find_one({"username": user["username"]})
-                author_pfp = "default.png"
-                if "pfp" in author:
-                    author_pfp = author["pfp"]
-
-                post = {
-                    "user": user["username"],
-                    "id": str(inserted_id),
-                    "content": escaped,
-                    "author": user["username"],
-                    "author_pfp": author_pfp,
-                    "likes": [],
-                    "comments": [],
-                    "timestamp": time.isoformat()
-                }
-                socketio.emit('create_post', {'data': post})
-                return
-
-            if action == 'like_post':
-                post_id = data["post_id"]
-                post_collection = db["posts"]
-
-                post = post_collection.find_one({"_id": ObjectId(post_id)})
-                if user["username"] in post["likes"]:
-                    post_collection.update_one(
-                        {"_id": ObjectId(post_id)},
-                        {"$pull": {"likes": user["username"]}}
-                    )
-                    post = post_collection.find_one({"_id": ObjectId(post_id)})
-                    like_count = len(post["likes"])
-                    socketio.emit('unlike_post', {'post_id': post_id, 'like_count': like_count, 'like_list': post["likes"]})
-                else:
-                    post_collection.update_one(
-                        {"_id": ObjectId(post_id)},
-                        {"$addToSet": {"likes": user["username"]}}
-                    )
-                    post = post_collection.find_one({"_id": ObjectId(post_id)})
-                    like_count = len(post["likes"])
-                    socketio.emit('like_post', {'post_id': post_id, 'like_count': like_count, 'like_list': post["likes"]})
-                return
-            
-            if action == 'delete_post':
-                post_id = data["post_id"]
-                post_collection = db["posts"]
-
-                post = post_collection.find_one({"_id": ObjectId(post_id)})
-                if not post:
-                    return
-                
-                if user["username"] == post["username"]:
-                    post = post_collection.delete_one({"_id": ObjectId(post_id)})
-                    socketio.emit('delete_post', {'post_id': post_id})
-                return
-            
+    current_time = datetime.now()
+    if current_time > user['tokens_expiry']:
         socketio.emit('unauthorized', {'message': 'Session expired/invalid token, please login again.'}, to=request.sid)
         disconnect()
         return
+
+    if action == 'create_post':
+        escaped = html.escape(data["message"])
+        post_collection = db["posts"]
+
+        time = datetime.now()
+        result = post_collection.insert_one(
+            {"username": user["username"], "timestamp": time, "message": escaped, "attachments": [],
+                "likes": [], "dislikes": [], "comments": {}})
+
+        inserted_id = result.inserted_id
+        author = credential_collection.find_one({"username": user["username"]})
+        author_pfp = "default.png"
+        if "pfp" in author:
+            author_pfp = author["pfp"]
+
+        post = {
+            "user": user["username"],
+            "id": str(inserted_id),
+            "content": escaped,
+            "author": user["username"],
+            "author_pfp": author_pfp,
+            "likes": [],
+            "comments": [],
+            "timestamp": time.isoformat()
+        }
+        socketio.emit('create_post', {'data': post})
+        return
+
+    if action == 'like_post':
+        post_id = data["post_id"]
+        post_collection = db["posts"]
+
+        post = post_collection.find_one({"_id": ObjectId(post_id)})
+        if user["username"] in post["likes"]:
+            post_collection.update_one(
+                {"_id": ObjectId(post_id)},
+                {"$pull": {"likes": user["username"]}}
+            )
+            post = post_collection.find_one({"_id": ObjectId(post_id)})
+            like_count = len(post["likes"])
+            socketio.emit('unlike_post', {'post_id': post_id, 'like_count': like_count, 'like_list': post["likes"]})
+        else:
+            post_collection.update_one(
+                {"_id": ObjectId(post_id)},
+                {"$addToSet": {"likes": user["username"]}}
+            )
+            post = post_collection.find_one({"_id": ObjectId(post_id)})
+            like_count = len(post["likes"])
+            socketio.emit('like_post', {'post_id': post_id, 'like_count': like_count, 'like_list': post["likes"]})
+        return
+    
+    if action == 'delete_post':
+        post_id = data["post_id"]
+        post_collection = db["posts"]
+
+        post = post_collection.find_one({"_id": ObjectId(post_id)})
+        if not post:
+            return
+        
+        if user["username"] == post["username"]:
+            post = post_collection.delete_one({"_id": ObjectId(post_id)})
+            socketio.emit('delete_post', {'post_id': post_id})
+        return
+            
+        
                 
 
 
 if __name__ == "__main__":
     if ws:
-        socketio.run(app, host='0.0.0.0', port=8080)
+        socketio.run(app, host='0.0.0.0', port=8080, debug=True)
     else:
         app.run(host='0.0.0.0', port=8080, debug=True)
 
