@@ -51,8 +51,6 @@ blocked_ips = {}  # Store blocked IPs and their block time
 def limit_requests():
     ip = request.environ.get('HTTP_X_REAL_IP')
     current_time = datetime.now()
-    app.logger.info(f"Request count for {ip}: {len(requests_by_ip[ip])}")
-    app.logger.info(f"Request details: Method: {request.method}, URL: {request.url}")
 
     if ip in blocked_ips:
         block_time = blocked_ips[ip]
@@ -199,6 +197,12 @@ def register():
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
+        if not username.isalnum():
+            flash("Username can only contain letters and numbers.", "error")
+            response = make_response(render_template('register.html'))
+            response.mimetype = "text/html"
+            return response
+
         # Check if passwords match
         if password != confirm_password:
             flash("Passwords do not match", "error")
@@ -238,7 +242,6 @@ def register():
     response = make_response(render_template('register.html'))
     response.mimetype = "text/html"
     return response
-
 
 @app.route('/logout', methods=['GET'])
 def logout():
