@@ -591,7 +591,7 @@ def scheduled_post_handler(scheduled_post_id, username, scheduled_time, content)
 
 if __name__ == "__main__":
     if ws:
-        socketio.run(app, host='0.0.0.0', port=8080, debug=True)
+        socketio.run(app, host='0.0.0.0', port=8080)
     else:
         app.run(host='0.0.0.0', port=8080, debug=True)
 
