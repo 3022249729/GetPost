@@ -49,8 +49,10 @@ blocked_ips = {}  # Store blocked IPs and their block time
 
 @app.before_request
 def limit_requests():
-    ip = request.environ.get('HTTP_X_REAL_IP')  # client's IP address
+    ip = request.environ.get('HTTP_X_REAL_IP')
     current_time = datetime.now()
+    app.logger.info(f"Request count for {ip}: {len(requests_by_ip[ip])}")
+    app.logger.info(f"Request details: Method: {request.method}, URL: {request.url}")
 
     if ip in blocked_ips:
         block_time = blocked_ips[ip]
@@ -71,6 +73,7 @@ def limit_requests():
     ]
 
     # less than 10sec more than 50 reuestes
+    
     if len(requests_by_ip[ip]) > MAX_REQUESTS:
         # the blcoked list = current time
         blocked_ips[ip] = current_time
@@ -585,7 +588,7 @@ def scheduled_post_handler(scheduled_post_id, username, scheduled_time, content)
 
 if __name__ == "__main__":
     if ws:
-        socketio.run(app, host='0.0.0.0', port=8080)
+        socketio.run(app, host='0.0.0.0', port=8080, debug=True)
     else:
         app.run(host='0.0.0.0', port=8080, debug=True)
 
