@@ -356,7 +356,6 @@ function setProfilePicture(image) {
                 alert(response.message);
                 if (request.status === 403){
                     document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
-                    window.location.href = '/login'; 
                 } else {
                     window.location.reload();
                 }
@@ -390,7 +389,6 @@ function uploadProfilePicture(event) {
                 alert(response.message);
                 if (request.status === 403){
                     document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
-                    window.location.href = '/login'; 
                 } else {
                     window.location.reload();
                 }
@@ -477,17 +475,9 @@ function initWS() {
     });
 
     socket.on('unauthorized', function(data) {
-        let hostname = window.location.hostname;
-        let parts = hostname.split('.');
-        let secondLevelDomain = parts.length > 1 ? parts[parts.length - 2] : hostname;
-        console.log(secondLevelDomain); 
-
-        document.cookie = `xsrf_token=; max-age=0; path=/; domain=${secondLevelDomain}`;
-        console.log(document.cookie);
-
+        document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
         socket.disconnect();
         alert(data.message);
-        window.location.href = '/login'; 
     });
 
     socket.on('schedule_post_error', function(data) {
