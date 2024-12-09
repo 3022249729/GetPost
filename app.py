@@ -1,7 +1,8 @@
 import eventlet
+
 eventlet.monkey_patch()
 
-from flask import Flask, render_template, make_response, request, redirect, url_for, flash, send_from_directory
+from flask import Flask, render_template, make_response, request, redirect, url_for, flash, send_from_directory, jsonify
 from flask_socketio import SocketIO, disconnect, emit
 from utils.db import connect_db
 from utils.login import validate_password
@@ -14,6 +15,7 @@ import os
 from bson import ObjectId
 import html
 import json
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 ws = True
@@ -29,6 +31,45 @@ else:
     print('Database not connected')
 credential_collection = db["credential"]
 
+MAX_REQUESTS = 50
+TIME_WINDOW = timedelta(seconds=10)
+BLOCK_TIME = timedelta(seconds=30)
+
+requests_by_ip = defaultdict(list)  # Store timestamps of requests by IP
+blocked_ips = {}  # Store blocked IPs and their block time
+
+
+@app.before_request
+def limit_requests():
+    ip = request.remote_addr  # client's IP address
+    current_time = datetime.now()
+
+    if ip in blocked_ips:
+        block_time = blocked_ips[ip]
+        if current_time < block_time + BLOCK_TIME:  # the time it block +30sec
+            return make_response(
+                jsonify({"message": "Too many requests. Please try again later."}), 429
+            )
+        else:
+            # block time has passed, unblock the IP
+            del blocked_ips[ip]
+
+    # request timestamp for this IP
+    requests_by_ip[ip].append(current_time)
+
+    # Remove requests older than the 10-second time window
+    requests_by_ip[ip] = [
+        timestamp for timestamp in requests_by_ip[ip] if current_time - timestamp < TIME_WINDOW
+    ]
+
+    # less than 10sec more than 50 reuestes
+    if len(requests_by_ip[ip]) > MAX_REQUESTS:
+        # the blcoked list = current time
+        blocked_ips[ip] = current_time
+        return make_response(
+            jsonify({"message": "Too many requests. Please try again later."}), 429
+        )
+
 
 @app.route('/css/<path:filename>', methods=['GET'])
 def serve_css(filename):
@@ -36,13 +77,13 @@ def serve_css(filename):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-    
+
     file_path = os.path.join("static/css", filename)
     if not os.path.isfile(file_path):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-    
+
     response = make_response(send_from_directory('static/css', filename))
     response.mimetype = "text/css"
     return response
@@ -54,13 +95,13 @@ def serve_js(filename):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-    
+
     file_path = os.path.join("static", filename)
     if not os.path.isfile(file_path):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-    
+
     response = make_response(send_from_directory('static', filename))
     response.mimetype = "text/javascript"
     return response
@@ -72,13 +113,13 @@ def serve_image(filename):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-    
+
     file_path = os.path.join("static/images", filename)
     if not os.path.isfile(file_path):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-    
+
     response = make_response(send_from_directory('static/images', filename))
     return response
 
@@ -125,7 +166,7 @@ def login():
     if request.method == 'GET':
         auth_token = request.cookies.get('auth_token')
         xsrf_token = request.cookies.get('xsrf_token')
-        
+
         if auth_token and xsrf_token:
             user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
             if user:
@@ -194,7 +235,8 @@ def logout():
     if auth_token:
         user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
         if user:
-            credential_collection.update_one({"_id": user["_id"]}, {"$set": {"auth_token_hash": None, "xsrf_token":None}})
+            credential_collection.update_one({"_id": user["_id"]},
+                                             {"$set": {"auth_token_hash": None, "xsrf_token": None}})
 
     response = make_response(redirect(url_for('login')))
     response.set_cookie('auth_token', '', expires=0)
@@ -306,11 +348,11 @@ def setpfp(image_name):
 
     if ".." in image_name or "/" in image_name:
         return {'success': False, 'message': 'Invalid profile picture name.'}, 400
-    
+
     file_path = os.path.join("static/images", image_name)
     if not os.path.isfile(file_path):
         return {'success': False, 'message': 'Invalid profile picture name.'}, 400
-    
+
     credential_collection.update_one(
         {"_id": ObjectId(user["_id"])},
         {"$set": {"pfp": image_name}}
@@ -359,13 +401,13 @@ def handle_connect():
     app.logger.info("connecting")
     if not xsrf_token or not auth_token:
         socketio.emit('unauthorized', {'message': 'Session expired/invalid token, please login again.'}, to=request.sid)
-        return 
-    
+        return
+
     user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
     if not user or xsrf_token != user["xsrf_token"]:
         socketio.emit('unauthorized', {'message': 'Session expired/invalid token, please login again.'}, to=request.sid)
         return
-        
+
 
 @socketio.on('message')
 def handle_websocket_message(str_data):
@@ -390,7 +432,7 @@ def handle_websocket_message(str_data):
         time = datetime.now()
         result = post_collection.insert_one(
             {"username": user["username"], "timestamp": time, "message": escaped, "attachments": [],
-                "likes": [], "dislikes": [], "comments": {}})
+             "likes": [], "dislikes": [], "comments": {}})
 
         inserted_id = result.inserted_id
         author = credential_collection.find_one({"username": user["username"]})
@@ -433,7 +475,7 @@ def handle_websocket_message(str_data):
             like_count = len(post["likes"])
             socketio.emit('like_post', {'post_id': post_id, 'like_count': like_count, 'like_list': post["likes"]})
         return
-    
+
     if action == 'delete_post':
         post_id = data["post_id"]
         post_collection = db["posts"]
@@ -441,14 +483,11 @@ def handle_websocket_message(str_data):
         post = post_collection.find_one({"_id": ObjectId(post_id)})
         if not post:
             return
-        
+
         if user["username"] == post["username"]:
             post = post_collection.delete_one({"_id": ObjectId(post_id)})
             socketio.emit('delete_post', {'post_id': post_id})
         return
-            
-        
-                
 
 
 if __name__ == "__main__":
@@ -456,4 +495,3 @@ if __name__ == "__main__":
         socketio.run(app, host='0.0.0.0', port=8080, debug=True)
     else:
         app.run(host='0.0.0.0', port=8080, debug=True)
-
