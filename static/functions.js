@@ -102,6 +102,9 @@ function createNewPost() {
     }
 
     if (ws){
+        if (!socket || socket.disconnected){
+            alert("Session expired/invalid token, please login again.")
+        }
         const scheduleCheckbox = document.getElementById("schedule-checkbox");
         const scheduleInput = document.getElementById("schedule-input");
     
