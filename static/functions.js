@@ -477,9 +477,16 @@ function initWS() {
     });
 
     socket.on('unauthorized', function(data) {
+        let hostname = window.location.hostname;
+        let parts = hostname.split('.');
+        let secondLevelDomain = parts.length > 1 ? parts[parts.length - 2] : hostname;
+        console.log(secondLevelDomain); 
+
+        document.cookie = `xsrf_token=; max-age=0; path=/; domain=${secondLevelDomain}`;
+        console.log(document.cookie);
+
         socket.disconnect();
         alert(data.message);
-        document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
         window.location.href = '/login'; 
     });
 
