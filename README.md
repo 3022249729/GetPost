@@ -48,5 +48,5 @@ Link: https://getpost.pro/
   15. Select the `Extra Large` option.
   16. Verify:
       - The text in all posts appears larger than `Large`, reflecting the `Extra Large` font size setting.
-  17. Notes:
+  17. **Notes:**
       - This functionality only adjusts the font size for the current user’s view and does not affect how other users see the posts.
