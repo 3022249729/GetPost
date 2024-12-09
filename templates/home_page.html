@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Home | GetPost</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('serve_css', filename='home_page.css') }}">
+</head>
+
+<body onload="welcome();">
+    <div id="navBar">
+        <div id="profileSection"  onclick="openProfileModal()">
+            <img id="profilePicture" src="{{ url_for('serve_image', filename=pfp) }}" alt="Profile Picture">
+            <span id="profileName">{{ username }}</span>
+        </div>
+        <div id="fontSizeControl">
+            <label for="fontSizeDropdown" style="display: none;">Font Size:</label>
+            <img src="{{ url_for('serve_image', filename='font-size.svg') }}" alt="Font Size" class="font-icon">
+            <select id="fontSizeDropdown" onchange="setFontSize(this.value)" class="font-size-dropdown">
+                <option value="small">Small</option>
+                <option value="medium" selected>Medium</option>
+                <option value="large">Large</option>
+                <option value="xlarge">Extra Large</option>
+            </select>
+        </div>
+        <div id="themeMode" onclick="changeThemeMode()">
+            <img id="themeModeIcon">
+            <span id="themeModeText"></span>
+        </div>
+        <a href="/logout" class="logout">
+            <img src="{{ url_for('serve_image', filename='logout-icon.svg') }}" alt="Logout Icon" class="logout-icon">
+            <span>Sign Out</span>
+        </a>
+    </div>
+
+    <div id="createPostContainer">
+        <textarea id="postMessageInput" placeholder="Post your new CSE312 meme here..." required></textarea>
+        <button id="postButton" onclick="createNewPost()">Post</button>
+    </div>
+
+    <div id="postsContainer"></div>
+
+    <div id="profileModal" class="modal">
+        <div class="profile-modal-content">
+            <span class="close" onclick="closeProfileModal()">&times;</span>
+            <div id="change-message">Change Profile Picture</div>
+            <div class="preset-images">
+                <div class="preset" onclick="setProfilePicture('j_ironman.png')">
+                    <img src="{{ url_for('serve_image', filename='j_ironman.png') }}" alt="Preset 1">
+                </div>
+                <div class="preset" onclick="setProfilePicture('j_monalisa.png')">
+                    <img src="{{ url_for('serve_image', filename='j_monalisa.png') }}" alt="Preset 2">
+                </div>
+                <div class="preset" onclick="setProfilePicture('j_trump.png')">
+                    <img src="{{ url_for('serve_image', filename='j_trump.png') }}" alt="Preset 3">
+                </div>
+                <div class="preset" onclick="setProfilePicture('j_west.png')">
+                    <img src="{{ url_for('serve_image', filename='j_west.png') }}" alt="Preset 4">
+                </div>
+                <div class="preset" onclick="setProfilePicture('j_laser.gif')">
+                    <img src="{{ url_for('serve_image', filename='j_laser.gif') }}" alt="Preset 5">
+                </div>
+                <div class="preset upload-circle" onclick="document.getElementById('profileUpload').click()">
+                    <span>+</span>
+                </div>
+            </div>
+            <input type="file" id="profileUpload" accept="image/*" style="display: none;" onchange="uploadProfilePicture(event)">
+        </div>
+    </div>
+
+    <div id="authorModal" class="modal">
+        <div class="author-modal-content">
+            <span class="close-author-modal" onclick="closeAuthorModal()">&times;</span>
+            <img id="authorpfp" src="" alt="Profile Picture">
+        </div>
+    </div>
+
+
+    <script src="{{ url_for('serve_js', filename='functions.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+</body>
+
+</html>

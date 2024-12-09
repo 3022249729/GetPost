@@ -1,0 +1,474 @@
+body {
+    font-family: Arial, sans-serif;
+    background-image: url('/images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+}
+
+#navBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 80%;
+    max-width: 800px;
+    background-color: white;
+    padding: 8px 20px;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-left: 1.5px solid #cecece;
+    border-right: 1.5px solid #cecece;
+    border-bottom: 1.5px solid #cecece;
+}
+
+#profileSection {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+#profilePicture {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#profileName {
+    font-size: 16px;
+    color: #333;
+}
+
+#createPostContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+    max-width: 800px;
+    background-color: white;
+    padding: 20px;
+    margin-top: 4px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    top: 0;
+    border: 1px solid #cecece;
+}
+
+#createPostContainer textarea {
+    width: 95%;
+    padding: 20px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+#createPostContainer textarea:focus {
+    outline: none; 
+  }
+
+#createPostContainer button {
+    margin-top: 12px;
+    top: 50%;
+    width: 200px;
+    border: 2px solid #adadad;
+    padding: 12px;
+    border-radius: 50px;
+    cursor: pointer;
+    background-color: transparent;
+    color: #adadad;
+}
+
+#createPostContainer button:hover {
+    background-color: #e2e2e2;
+    color: #424242;
+}
+
+#postsContainer {
+    width: 80%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.post-container {
+    background-color: white;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 800px;
+    padding: 20px;
+    margin: 4px 0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.post-profile-picture {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.post-author{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    width: fit-content;
+}
+
+.post-username {
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+    color: #555;
+}
+
+.delete-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.post-author-line{
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.post-content {
+    font-size: 16px;
+    color: #333;
+    white-space: pre-line;
+    margin: 16px 0;
+}
+
+.post-timestamp {
+    font-size: 12px;
+    color: #777;
+}
+
+.post-likes-list{
+    font-size: 12px;
+    color: #575757;
+    margin-top: 8px;
+}
+
+.post-like {
+    margin-top: 8px;
+    width: auto;
+    height: 24px;
+    border: 1px;
+    background: #ffffff;
+    color: #141414;
+    font-size: 12px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 6px 20px -5px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    padding: 0 8px;
+}
+
+.post-like:hover {
+    background-color: #e2e2e2;
+}
+
+
+#user{
+    width: 95%;
+    font-size: 14px;
+    color: #777;
+    padding: 10px;
+    margin: 5px 0;
+    align-self: flex-start;
+}
+
+.logout,
+#fontSizeControl,
+#themeMode {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #141414;
+    font-size: 16px;
+    padding: 5px 10px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    gap: 8px;
+}
+
+.logout-icon,
+.font-icon,
+#themeModeIcon {
+    width: 20px;
+    height: 20px;
+}
+
+
+#profileModal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    overflow: auto;
+    padding-top: 10px;
+}
+
+.profile-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+}
+
+#authorModal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+}
+
+.author-modal-content {
+    position: relative;
+    background-color: #fefefe;
+    padding: 30px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    display: inline-block;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: hidden;
+}
+
+#authorpfp {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+.close-author-modal {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    z-index: 101;
+    cursor: pointer;
+}
+
+.close-author-modal:hover,
+.close-author-modal:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.preset-images {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    justify-items: center;
+    margin-top: 20px;
+}
+
+.preset {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    margin-bottom: 20px;
+}
+
+.preset img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preset:hover {
+    transform: scale(1.1);
+}
+
+.upload-circle {
+    background-color: #ddd;
+    font-size: 2rem;
+    color: #555;
+    font-weight: bold;
+}
+
+.upload-circle:hover {
+    background-color: #ccc;
+    transform: scale(1.1);
+}
+
+#change-message{
+    margin-top: 30px;
+    margin-left: 12px;
+    margin-bottom: 50px;
+    font-size: 20px;
+}
+
+#darkModeToggle{
+    display: flex;
+    align-items: center;
+}
+
+body.dark-mode {
+    background-color: grey;
+    color: white;
+    background-image: url('/images/background-dark.jpg');
+}
+
+body.dark-mode #navBar {
+    background-color: #444;
+    color: white;
+    border: none;
+}
+
+body.dark-mode #createPostContainer,
+body.dark-mode .post-container,
+body.dark-mode .profile-modal-content,
+body.dark-mode .author-modal-content {
+    background-color: #555;
+    color: white;
+    border-color: #666;
+}
+
+body.dark-mode textarea {
+    background-color: #666;
+    color: white;
+    border-color: #777;
+}
+
+body.dark-mode button {
+    background-color: #777;
+    color: white;
+}
+
+body.dark-mode .post-likes-list {
+    color: #ccc;
+}
+
+body.dark-mode .post-content {
+    color: white;
+}
+
+body.dark-mode .post-username {
+    color: white;
+}
+
+body.dark-mode .post-timestamp {
+    color: #ccc;
+}
+
+body.dark-mode #profileName {
+    color: white;
+}
+
+body.dark-mode .logout {
+    color: white;
+    background-color: transparent;
+    border-color: white;
+}
+
+body.dark-mode #themeModeText {
+    color: white;
+    background-color: transparent;
+    border-color: white;
+}
+
+
+body.dark-mode .logout-icon, 
+body.dark-mode .delete-icon,
+body.dark-mode .font-icon,
+body.dark-mode #themeModeIcon{
+    filter: invert(1);
+}
+
+body.dark-mode #createPostContainer textarea::placeholder {
+    color: #ccc;
+}
+
+body.dark-mode #fontSizeDropdown{
+    background-color: #444;
+    color: white;
+}
+
+.font-small {
+    font-size: 12px;
+}
+
+.font-medium {
+    font-size: 16px;
+}
+
+.font-large {
+    font-size: 20px;
+}
+
+.font-xlarge {
+    font-size: 24px;
+}
+
+#fontSizeDropdown {
+    border: 0px;
+    background-color: white;
+    color: black;
+    font-size: 16px;
+  }
+
+#fontSizeDropdown:focus {
+    outline: none; 
+  }
+
