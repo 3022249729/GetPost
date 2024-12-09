@@ -49,7 +49,7 @@ blocked_ips = {}  # Store blocked IPs and their block time
 
 @app.before_request
 def limit_requests():
-    ip = request.environ.get('X-Real-IP', request.remote_addr)  # client's IP address
+    ip = request.environ.get('HTTP_X_REAL_IP')  # client's IP address
     current_time = datetime.now()
 
     if ip in blocked_ips:
