@@ -1,6 +1,6 @@
 FROM python:3.8
 
-ENV HOME /root
+ENV HOME=/root
 ENV TZ=America/New_York
 # set time zone for the time of the posts
 WORKDIR /root
