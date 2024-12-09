@@ -56,7 +56,7 @@ body {
     background-color: white;
     padding: 20px;
     margin-top: 4px;
-    margin-bottom: 16px;
+    margin-bottom: 4px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     top: 0;
@@ -72,8 +72,8 @@ body {
 }
 
 #createPostContainer textarea:focus {
-    outline: none; 
-  }
+    outline: none;
+}
 
 #createPostContainer button {
     margin-top: 12px;
@@ -98,6 +98,15 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-top: 16px;
+}
+
+#scheduledPostContainer {
+    width: 80%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .post-container {
@@ -112,6 +121,19 @@ body {
     word-wrap: break-word;
 }
 
+.scheduled-post-container {
+    background-color: white;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 800px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    border: 1px solid #cecece;
+}
+
+
 .post-profile-picture {
     width: 35px;
     height: 35px;
@@ -119,7 +141,7 @@ body {
     object-fit: cover;
 }
 
-.post-author{
+.post-author {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -142,7 +164,7 @@ body {
     cursor: pointer;
 }
 
-.post-author-line{
+.post-author-line {
     width: 100%;
     max-width: 800px;
     display: flex;
@@ -162,7 +184,7 @@ body {
     color: #777;
 }
 
-.post-likes-list{
+.post-likes-list {
     font-size: 12px;
     color: #575757;
     margin-top: 8px;
@@ -188,7 +210,7 @@ body {
 }
 
 
-#user{
+#user {
     width: 95%;
     font-size: 14px;
     color: #777;
@@ -352,14 +374,14 @@ body {
     transform: scale(1.1);
 }
 
-#change-message{
+#change-message {
     margin-top: 30px;
     margin-left: 12px;
     margin-bottom: 50px;
     font-size: 20px;
 }
 
-#darkModeToggle{
+#darkModeToggle {
     display: flex;
     align-items: center;
 }
@@ -379,7 +401,9 @@ body.dark-mode #navBar {
 body.dark-mode #createPostContainer,
 body.dark-mode .post-container,
 body.dark-mode .profile-modal-content,
-body.dark-mode .author-modal-content {
+body.dark-mode .author-modal-content,
+body.dark-mode .scheduled-post-container,
+body.dark-mode #scheduledPostContainer {
     background-color: #555;
     color: white;
     border-color: #666;
@@ -429,10 +453,10 @@ body.dark-mode #themeModeText {
 }
 
 
-body.dark-mode .logout-icon, 
+body.dark-mode .logout-icon,
 body.dark-mode .delete-icon,
 body.dark-mode .font-icon,
-body.dark-mode #themeModeIcon{
+body.dark-mode #themeModeIcon {
     filter: invert(1);
 }
 
@@ -440,7 +464,7 @@ body.dark-mode #createPostContainer textarea::placeholder {
     color: #ccc;
 }
 
-body.dark-mode #fontSizeDropdown{
+body.dark-mode #fontSizeDropdown {
     background-color: #444;
     color: white;
 }
@@ -466,9 +490,12 @@ body.dark-mode #fontSizeDropdown{
     background-color: white;
     color: black;
     font-size: 16px;
-  }
+}
 
 #fontSizeDropdown:focus {
-    outline: none; 
-  }
+    outline: none;
+}
 
+input[type="datetime-local"] {
+    margin-top: 4px;
+}

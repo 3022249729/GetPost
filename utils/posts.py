@@ -58,7 +58,6 @@ def get_post(db, request):
             author_pfp = author["pfp"]
 
         posts_list.append({
-            "user": user["username"],
             "id": str(post["_id"]),
             "content": post["message"],
             "author": post["username"],

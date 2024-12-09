@@ -2,8 +2,8 @@ import eventlet
 
 eventlet.monkey_patch()
 
-from flask import Flask, render_template, make_response, request, redirect, url_for, flash, send_from_directory, jsonify
-from flask_socketio import SocketIO, disconnect, emit
+from flask import Flask, render_template, make_response, request, redirect, url_for, flash, send_from_directory, jsonify, session
+from flask_socketio import SocketIO, disconnect
 from utils.db import connect_db
 from utils.login import validate_password
 from utils.posts import get_post, create_post, delete_post
@@ -15,6 +15,7 @@ import os
 from bson import ObjectId
 import html
 import json
+import time
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -29,7 +30,14 @@ if db is not None:
     print('Database connected successfully')
 else:
     print('Database not connected')
+
 credential_collection = db["credential"]
+post_collection = db["posts"]
+scheduled_post_collection = db["scheduled_posts"]
+scheduled_post_collection.delete_many({})
+
+user_sockets = {}
+scheduled_posts = {}
 
 MAX_REQUESTS = 50
 TIME_WINDOW = timedelta(seconds=10)
@@ -77,13 +85,13 @@ def serve_css(filename):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-
+    
     file_path = os.path.join("static/css", filename)
     if not os.path.isfile(file_path):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-
+    
     response = make_response(send_from_directory('static/css', filename))
     response.mimetype = "text/css"
     return response
@@ -95,13 +103,13 @@ def serve_js(filename):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-
+    
     file_path = os.path.join("static", filename)
     if not os.path.isfile(file_path):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-
+    
     response = make_response(send_from_directory('static', filename))
     response.mimetype = "text/javascript"
     return response
@@ -113,13 +121,13 @@ def serve_image(filename):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-
+    
     file_path = os.path.join("static/images", filename)
     if not os.path.isfile(file_path):
         response = make_response("404 NOT FOUND", 404)
         response.mimetype = "text/html"
         return response
-
+    
     response = make_response(send_from_directory('static/images', filename))
     return response
 
@@ -166,7 +174,7 @@ def login():
     if request.method == 'GET':
         auth_token = request.cookies.get('auth_token')
         xsrf_token = request.cookies.get('xsrf_token')
-
+        
         if auth_token and xsrf_token:
             user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
             if user:
@@ -235,8 +243,7 @@ def logout():
     if auth_token:
         user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
         if user:
-            credential_collection.update_one({"_id": user["_id"]},
-                                             {"$set": {"auth_token_hash": None, "xsrf_token": None}})
+            credential_collection.update_one({"_id": user["_id"]}, {"$set": {"auth_token_hash": None, "xsrf_token":None}})
 
     response = make_response(redirect(url_for('login')))
     response.set_cookie('auth_token', '', expires=0)
@@ -264,6 +271,7 @@ def home():
         # verify user
 
     username = user['username']
+    session['username'] = username
     pfp = "default.png"
     if "pfp" in user:
         pfp = user["pfp"]
@@ -323,7 +331,7 @@ def like_post(post_id):
         response.mimetype = "text/plain"
         return response
 
-    post_collection = db["posts"]
+    
     post_collection.update_one(
         {"_id": ObjectId(post_id)},
         {"$addToSet": {"likes": user["username"]}}
@@ -348,11 +356,11 @@ def setpfp(image_name):
 
     if ".." in image_name or "/" in image_name:
         return {'success': False, 'message': 'Invalid profile picture name.'}, 400
-
+    
     file_path = os.path.join("static/images", image_name)
     if not os.path.isfile(file_path):
         return {'success': False, 'message': 'Invalid profile picture name.'}, 400
-
+    
     credential_collection.update_one(
         {"_id": ObjectId(user["_id"])},
         {"$set": {"pfp": image_name}}
@@ -398,16 +406,26 @@ def handle_connect():
     xsrf_token = request.args.get('xsrf_token')
     auth_token = request.cookies.get("auth_token")
 
-    app.logger.info("connecting")
+
     if not xsrf_token or not auth_token:
         socketio.emit('unauthorized', {'message': 'Session expired/invalid token, please login again.'}, to=request.sid)
-        return
-
+        return 
+    
     user = credential_collection.find_one({"auth_token_hash": hashlib.sha256(auth_token.encode()).hexdigest()})
     if not user or xsrf_token != user["xsrf_token"]:
         socketio.emit('unauthorized', {'message': 'Session expired/invalid token, please login again.'}, to=request.sid)
         return
+        
+    username = session.get("username")
+    if username:
+        user_sockets[username] = request.sid
+        socketio.emit('auth', {'username': username}, to=request.sid)
 
+@socketio.on('disconnect')
+def handle_disconnect():
+    username = session.get('username')
+    if username and username in user_sockets:
+        del user_sockets[username]
 
 @socketio.on('message')
 def handle_websocket_message(str_data):
@@ -427,12 +445,12 @@ def handle_websocket_message(str_data):
 
     if action == 'create_post':
         escaped = html.escape(data["message"])
-        post_collection = db["posts"]
 
         time = datetime.now()
         result = post_collection.insert_one(
             {"username": user["username"], "timestamp": time, "message": escaped, "attachments": [],
-             "likes": [], "dislikes": [], "comments": {}})
+                "likes": [], "dislikes": [], "comments": {}})
+    
 
         inserted_id = result.inserted_id
         author = credential_collection.find_one({"username": user["username"]})
@@ -441,7 +459,6 @@ def handle_websocket_message(str_data):
             author_pfp = author["pfp"]
 
         post = {
-            "user": user["username"],
             "id": str(inserted_id),
             "content": escaped,
             "author": user["username"],
@@ -450,12 +467,36 @@ def handle_websocket_message(str_data):
             "comments": [],
             "timestamp": time.isoformat()
         }
+    
         socketio.emit('create_post', {'data': post})
+        return
+    
+    if action == 'schedule_post':
+        escaped = html.escape(data["message"])
+        scheduled_time_str = data.get('scheduledTime')
+        scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%dT%H:%M')
+
+        if scheduled_time <= datetime.now():
+            socketio.emit('schedule_post_error', {'message': "Please choose a scheduled time in the future. Unfortunately, GetPost hasn't invented a time machine to travel back in time yet! :("}, to=request.sid)
+            return
+        
+        username = user["username"]
+        if username in scheduled_posts:
+            socketio.emit('schedule_post_error', {'message': "You can only have 1 scheduled post."}, to=request.sid)
+            return
+
+        time = datetime.now()
+        post = {"author": user["username"], "timestamp": time, "message": escaped, "scheduled_time": scheduled_time}
+        result = scheduled_post_collection.insert_one(post)
+
+        post_id = result.inserted_id
+        
+
+        scheduled_posts[username] = socketio.start_background_task(scheduled_post_handler, post_id, username, scheduled_time, escaped)
         return
 
     if action == 'like_post':
         post_id = data["post_id"]
-        post_collection = db["posts"]
 
         post = post_collection.find_one({"_id": ObjectId(post_id)})
         if user["username"] in post["likes"]:
@@ -475,23 +516,76 @@ def handle_websocket_message(str_data):
             like_count = len(post["likes"])
             socketio.emit('like_post', {'post_id': post_id, 'like_count': like_count, 'like_list': post["likes"]})
         return
-
+    
     if action == 'delete_post':
         post_id = data["post_id"]
-        post_collection = db["posts"]
 
         post = post_collection.find_one({"_id": ObjectId(post_id)})
         if not post:
             return
-
+        
         if user["username"] == post["username"]:
             post = post_collection.delete_one({"_id": ObjectId(post_id)})
             socketio.emit('delete_post', {'post_id': post_id})
         return
+            
+        
+def scheduled_post_handler(scheduled_post_id, username, scheduled_time, content):
+    while True:
+        now = datetime.now()
+
+        if scheduled_time <= now:
+            scheduled_post = scheduled_post_collection.find_one({"_id": scheduled_post_id})
+
+            result = post_collection.insert_one(
+            {"username": username, "timestamp": scheduled_time, "message": scheduled_post["message"], "attachments": [],
+                "likes": [], "dislikes": [], "comments": {}})
+            inserted_id = result.inserted_id
+
+            author = credential_collection.find_one({"username": scheduled_post["author"]})
+            author_pfp = "default.png"
+            if "pfp" in author:
+                author_pfp = author["pfp"]
+
+            post_to_send = {
+                "user": username,
+                "id": str(inserted_id),
+                "content": scheduled_post["message"],
+                "author": scheduled_post["author"],
+                "author_pfp": author_pfp,
+                "likes": [],
+                "comments": [],
+                "timestamp": scheduled_post["scheduled_time"].isoformat()
+            }
+
+            user_socket_id = user_sockets.get(scheduled_post["author"])
+            socketio.emit('created_scheduled_post', room=user_socket_id)
+            socketio.emit('create_post', {'data': post_to_send})
+
+            scheduled_post_collection.delete_one({"_id": scheduled_post_id})
+            del scheduled_posts[username]
+            break 
+
+        else:
+            time_remaining = scheduled_time - now
+
+            hours_remaining = time_remaining.seconds // 3600
+            minutes_remaining = (time_remaining.seconds % 3600) // 60
+            seconds_remaining = time_remaining.seconds % 60
+
+            remaining_time_message = f"Scheduled post is set to publish in {hours_remaining}h {minutes_remaining}m {seconds_remaining}s."
+
+            user_socket_id = user_sockets.get(username)
+            if user_socket_id:
+                socketio.emit('remaining_time', {"message": remaining_time_message, "content": content, "scheduled_id":str(scheduled_post_id)}, room=user_socket_id)
+
+        time.sleep(1)
+
 
 
 if __name__ == "__main__":
     if ws:
-        socketio.run(app, host='0.0.0.0', port=8080, debug=True)
+        socketio.run(app, host='0.0.0.0', port=8080)
     else:
         app.run(host='0.0.0.0', port=8080, debug=True)
+

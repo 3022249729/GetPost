@@ -10,7 +10,7 @@
 
 <body onload="welcome();">
     <div id="navBar">
-        <div id="profileSection"  onclick="openProfileModal()">
+        <div id="profileSection" onclick="openProfileModal()">
             <img id="profilePicture" src="{{ url_for('serve_image', filename=pfp) }}" alt="Profile Picture">
             <span id="profileName">{{ username }}</span>
         </div>
@@ -36,9 +36,15 @@
 
     <div id="createPostContainer">
         <textarea id="postMessageInput" placeholder="Post your new CSE312 meme here..." required></textarea>
+        <label for="scheduler">
+            <input type="checkbox" id="schedule-checkbox" onchange="toggleScheduler()"> Schedule Post
+        </label>
+        <input type="datetime-local" id="schedule-input" style="display: none;" />
         <button id="postButton" onclick="createNewPost()">Post</button>
     </div>
 
+    <div id="scheduledPostContainer" style="display: none;"></div>
+    
     <div id="postsContainer"></div>
 
     <div id="profileModal" class="modal">
@@ -65,7 +71,8 @@
                     <span>+</span>
                 </div>
             </div>
-            <input type="file" id="profileUpload" accept="image/*" style="display: none;" onchange="uploadProfilePicture(event)">
+            <input type="file" id="profileUpload" accept="image/*" style="display: none;"
+                onchange="uploadProfilePicture(event)">
         </div>
     </div>
 
@@ -78,7 +85,9 @@
 
 
     <script src="{{ url_for('serve_js', filename='functions.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous"></script>
 </body>
 
 </html>

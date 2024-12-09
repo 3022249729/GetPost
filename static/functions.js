@@ -3,6 +3,7 @@ var socket;
 let posts = {};
 
 let currentFontSize = 'medium';
+let user;
 
 function changeThemeMode() {
     const img = document.getElementById('themeModeIcon');
@@ -101,10 +102,30 @@ function createNewPost() {
     }
 
     if (ws){
-        socket.send(JSON.stringify({
-            action: 'create_post',
-            data: { message: message }
-        }));
+        const scheduleCheckbox = document.getElementById("schedule-checkbox");
+        const scheduleInput = document.getElementById("schedule-input");
+    
+        if (scheduleCheckbox.checked) {
+            const scheduledTime = scheduleInput.value;
+            if (!scheduledTime) {
+                alert("Please select a time for the scheduled post.");
+                return;
+            }
+
+            socket.send(JSON.stringify({
+                action: 'schedule_post',
+                data: { message: message, scheduledTime: scheduledTime }
+            }));
+            scheduleCheckbox.checked = false;
+            scheduleInput.style.display = "none";
+
+        } else {
+            socket.send(JSON.stringify({
+                action: 'create_post',
+                data: { message: message }
+            }));
+        }
+
     } else {
         const request = new XMLHttpRequest();
         request.onreadystatechange = function () {
@@ -124,6 +145,7 @@ function getPosts() {
     const request = new XMLHttpRequest();
     request.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
+            user = localStorage.getItem('auth_user');
             updatePosts(JSON.parse(this.responseText));
         }
     };
@@ -178,7 +200,7 @@ function addPostToContainer(messageJSON) {
     const postsContainer = document.getElementById("postsContainer");
     const fontSize = messageJSON.fontSize || currentFontSize;
     messageJSON.fontSize = fontSize;
-    postsContainer.insertAdjacentHTML("afterbegin", createPostHTML(messageJSON,fontSize));
+    postsContainer.insertAdjacentHTML("afterbegin", createPostHTML(messageJSON));
 }
 
 function createPostHTML(postData) {
@@ -206,7 +228,8 @@ function createPostHTML(postData) {
     author.appendChild(profilePicture);
     author.appendChild(username);
     authorLine.appendChild(author)
-    if (postData.author === postData.user){
+
+    if (postData.author === user){
         const delete_icon = document.createElement("img");
         delete_icon.className = "delete-icon";
         delete_icon.src = `/images/delete.svg`;
@@ -381,6 +404,7 @@ function uploadProfilePicture(event) {
 }
 
 function initWS() {
+    
     const xsrfToken = getXSRF();
     socket = io({
         query: {
@@ -390,10 +414,15 @@ function initWS() {
 
     socket.on('connect', function() {
         console.log('WebSocket connected');
+        
     });
 
     socket.on('disconnect', function() {
         console.log('WebSocket disconnected');
+    });
+
+    socket.on('auth', function(data) {
+        localStorage.setItem('auth_user', data.username);
     });
 
     socket.on('create_post', function(data) {
@@ -453,6 +482,21 @@ function initWS() {
         document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
         window.location.href = '/login'; 
     });
+
+    socket.on('schedule_post_error', function(data) {
+        alert(data.message);
+    });
+
+    socket.on('remaining_time', function(data) {
+        addScheduledPostToContainer(data);
+    });
+    
+    socket.on('created_scheduled_post', function() {
+            const scheduledPostContainer = document.getElementById("scheduledPostContainer");
+            scheduledPostContainer.innerHTML = "";
+            scheduledPostContainer.style.display = "none";
+    });
+    
 }
 
 function setFontSize(size) {
@@ -462,4 +506,54 @@ function setFontSize(size) {
         post.classList.remove('font-small', 'font-medium', 'font-large', 'font-xlarge');
         post.classList.add(`font-${size}`);
     });
+}
+
+function toggleScheduler() {
+    const scheduleCheckbox = document.getElementById("schedule-checkbox");
+    const scheduleInput = document.getElementById("schedule-input");
+
+    if (scheduleCheckbox.checked) {
+        scheduleInput.style.display = "block";
+    } else {
+        scheduleInput.style.display = "none";
+    }
+}
+
+function addScheduledPostToContainer(messageJSON) {
+    const scheduledPostContainer = document.getElementById("scheduledPostContainer");
+    scheduledPostContainer.innerHTML = "";
+
+    if (scheduledPostContainer.style.display === "none") {
+        scheduledPostContainer.style.display = "flex";
+    }
+
+    const fontSize = messageJSON.fontSize || currentFontSize;
+    messageJSON.fontSize = fontSize;
+    scheduledPostContainer.insertAdjacentHTML("afterbegin", createScheduledPostHTML(messageJSON));
+}
+
+function createScheduledPostHTML(postData) {
+    const scheduledPostContainer = document.createElement("div");
+
+    const fontSizeClass = `font-${postData.fontSize || currentFontSize}`;
+    scheduledPostContainer.className = `scheduled-post-container ${fontSizeClass}`;
+    scheduledPostContainer.id = postData.scheduled_id;
+
+    const authorLine = document.createElement("div");
+    authorLine.className = "post-author-line";
+    
+    const username = document.createElement("div");
+    username.className = "post-username";
+    username.textContent = postData.message;
+
+    authorLine.appendChild(username)
+
+    const content = document.createElement("div");
+    content.className = `post-content ${fontSizeClass}`
+    content.innerHTML = postData.content;
+
+    scheduledPostContainer.appendChild(authorLine);
+    scheduledPostContainer.appendChild(content);
+
+    return scheduledPostContainer.outerHTML;
 }
