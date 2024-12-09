@@ -38,7 +38,7 @@ Link: https://getpost.pro/
   8. Click on the font-size adjustment button open the dropdown menu.
   9. Select the `Small` option.
   10. Verify:
-     - The text in all posts appears smaller than default, reflecting the `Small` font size setting.
+      - The text in all posts appears smaller than default, reflecting the `Small` font size setting.
   11. Select the `Medium` option.
   12. Verify:
       - The text in all posts appears larger than `Small`, reflecting the `Medium` font size setting.
@@ -48,3 +48,5 @@ Link: https://getpost.pro/
   15. Select the `Extra Large` option.
   16. Verify:
       - The text in all posts appears larger than `Large`, reflecting the `Extra Large` font size setting.
+  17. Notes:
+      - This functionality only adjusts the font size for the current user’s view and does not affect how other users see the posts.
