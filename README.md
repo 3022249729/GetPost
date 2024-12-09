@@ -1,8 +1,8 @@
 # GetPost
-## Link: https://getpost.pro/
+Link: https://getpost.pro/
 
-### Testing Procedure
-#### Dark Mode/Light Mode
+## Testing Procedure
+### Dark Mode/Light Mode
   1. Use any browser of your choice.
   2. Navigate to https://getpost.pro/.
   3. Create an account by clicking `Register here`.
@@ -27,7 +27,7 @@
       - Every thing on the post and website is clear and visible.
       - "sun icon and `Light Mode`" changed to "moon icon and `Dark Mode`".
      
-#### Change Font Size
+### Change Font Size
   1. Use any browser of your choice.
   2. Navigate to https://getpost.pro/.
   3. Create an account by clicking `Register here`.
@@ -35,7 +35,7 @@
   5. At the home page, send multiple posts with random text messages.
   6. Locate the navigation bar at the top of the page.
   7. Find the font-size adjustment button in the navigation bar, displayed as a letter icon with a dropdown.
-  8. Click on the change-font-size button open the dropdown menu.
+  8. Click on the font-size adjustment button open the dropdown menu.
   9. Select the `Small` option.
   10. Verify:
      - The text in all posts appears smaller than default, reflecting the `Small` font size setting.
