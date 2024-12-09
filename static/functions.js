@@ -355,6 +355,7 @@ function setProfilePicture(image) {
                 const response = JSON.parse(request.responseText)
                 alert(response.message);
                 if (request.status === 403){
+                    socket.disconnect();
                     document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
                 } else {
                     window.location.reload();
@@ -388,6 +389,7 @@ function uploadProfilePicture(event) {
                 const response = JSON.parse(request.responseText)
                 alert(response.message);
                 if (request.status === 403){
+                    socket.disconnect();
                     document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
                 } else {
                     window.location.reload();
