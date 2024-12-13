@@ -76,3 +76,8 @@ button:hover {
     margin-top: 10px;
     white-space: nowrap;
 }
+
+#name {
+    font-size: 30px;
+    font-weight: bold;
+}

@@ -8,7 +8,7 @@ let user;
 function changeThemeMode() {
     const img = document.getElementById('themeModeIcon');
     const span = document.getElementById('themeModeText')
-    
+
     const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
 
     if (isDarkMode) {
@@ -19,7 +19,7 @@ function changeThemeMode() {
     } else {
         img.src = "/images/light-mode.svg";
         span.textContent = "Light Mode";
-        document.body.classList.add('dark-mode'); 
+        document.body.classList.add('dark-mode');
         localStorage.setItem('darkMode', 'enabled');
     }
 }
@@ -28,7 +28,7 @@ function initDarkMode() {
     const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
     const img = document.getElementById('themeModeIcon');
     const span = document.getElementById('themeModeText')
-    
+
     if (isDarkMode) {
         document.body.classList.add('dark-mode');
         img.src = "/images/light-mode.svg";
@@ -49,19 +49,25 @@ function getXSRF() {
             xsrf_token = val;
             break;
         }
-    } 
+    }
     return xsrf_token
 }
 
 function welcome() {
     initDarkMode();
-
     const postMessageInput = document.getElementById("postMessageInput");
 
     document.addEventListener("keydown", function (event) {
         if (event.code === "Enter" && document.activeElement === postMessageInput) {
             event.preventDefault();
-            createNewPost();
+            const messageLength = postMessageInput.value.length;
+            if (messageLength === 0) {
+                alert("You need to type something in order to post!");
+            } else if (messageLength > 2000) {
+                alert(`Your content exceeds the 2,000-character limit. Please shorten it and post again.`);
+            } else {
+                createNewPost();
+            }
         }
     });
 
@@ -90,24 +96,25 @@ function redirectToRegister() {
 }
 
 
-
 function createNewPost() {
     const postMessageInput = document.getElementById("postMessageInput");
     const message = postMessageInput.value;
-    postMessageInput.value = "";
-
-    if (!message) {
+    const messageLength = message.length;
+    if (messageLength === 0) {
         alert("You need to type something in order to post!");
-        return;
+        return
+    } else if (messageLength > 2000) {
+        alert(`Your content exceeds the 2,000-character limit. Please shorten it and post again.`);
+        return
     }
 
-    if (ws){
-        if (!socket || socket.disconnected){
+    if (ws) {
+        if (!socket || socket.disconnected) {
             alert("Session expired/invalid token, please login again.")
         }
         const scheduleCheckbox = document.getElementById("schedule-checkbox");
         const scheduleInput = document.getElementById("schedule-input");
-    
+
         if (scheduleCheckbox.checked) {
             const scheduledTime = scheduleInput.value;
             if (!scheduledTime) {
@@ -122,12 +129,14 @@ function createNewPost() {
             scheduleCheckbox.checked = false;
             scheduleInput.style.display = "none";
 
+
         } else {
             socket.send(JSON.stringify({
                 action: 'create_post',
                 data: { message: message }
             }));
         }
+        postMessageInput.value = "";
 
     } else {
         const request = new XMLHttpRequest();
@@ -136,7 +145,7 @@ function createNewPost() {
                 getPosts();
             }
         };
-        const messageJSON = { "message": message, "fontSize": currentFontSize};
+        const messageJSON = { "message": message, "fontSize": currentFontSize };
         request.open("POST", "/posts");
         request.setRequestHeader('Content-Type', 'application/json');
         request.send(JSON.stringify(messageJSON));
@@ -232,7 +241,7 @@ function createPostHTML(postData) {
     author.appendChild(username);
     authorLine.appendChild(author)
 
-    if (postData.author === user){
+    if (postData.author === user) {
         const delete_icon = document.createElement("img");
         delete_icon.className = "delete-icon";
         delete_icon.src = `/images/delete.svg`;
@@ -241,7 +250,7 @@ function createPostHTML(postData) {
         authorLine.appendChild(delete_icon)
 
     }
-    
+
     author.setAttribute("onclick", `openAuthorModal(${JSON.stringify(postData.author_pfp)})`);
 
     const content = document.createElement("div");
@@ -279,7 +288,7 @@ function createPostHTML(postData) {
 }
 
 function handleLike(postId) {
-    if (ws){
+    if (ws) {
         socket.send(JSON.stringify({
             action: 'like_post',
             data: { post_id: postId }
@@ -298,7 +307,7 @@ function handleLike(postId) {
 }
 
 function handleDelete(postId) {
-    if (ws){
+    if (ws) {
         socket.send(JSON.stringify({
             action: 'delete_post',
             data: { post_id: postId }
@@ -317,8 +326,20 @@ function handleDelete(postId) {
 }
 
 function openProfileModal() {
+    const preset1 = document.getElementById('preset1');
+    preset1.src = "/images/j_ironman.png"
+    const preset2 = document.getElementById('preset2');
+    preset2.src = "/images/j_monalisa.png"
+    const preset3 = document.getElementById('preset3');
+    preset3.src = "/images/j_trump.png"
+    const preset4 = document.getElementById('preset4');
+    preset4.src = "/images/j_west.png"
+    const preset5 = document.getElementById('preset5');
+    preset5.src = "/images/j_laser.gif"
+
     const modal = document.getElementById("profileModal");
     modal.style.display = "block";
+
 }
 
 function closeProfileModal() {
@@ -357,7 +378,7 @@ function setProfilePicture(image) {
             } else {
                 const response = JSON.parse(request.responseText)
                 alert(response.message);
-                if (request.status === 403){
+                if (request.status === 403) {
                     socket.disconnect();
                     document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
                 } else {
@@ -391,7 +412,7 @@ function uploadProfilePicture(event) {
             } else {
                 const response = JSON.parse(request.responseText)
                 alert(response.message);
-                if (request.status === 403){
+                if (request.status === 403) {
                     socket.disconnect();
                     document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
                 } else {
@@ -407,7 +428,7 @@ function uploadProfilePicture(event) {
 }
 
 function initWS() {
-    
+
     const xsrfToken = getXSRF();
     socket = io({
         query: {
@@ -415,25 +436,25 @@ function initWS() {
         },
     });
 
-    socket.on('connect', function() {
+    socket.on('connect', function () {
         console.log('WebSocket connected');
-        
+
     });
 
-    socket.on('disconnect', function() {
+    socket.on('disconnect', function () {
         console.log('WebSocket disconnected');
     });
 
-    socket.on('auth', function(data) {
+    socket.on('auth', function (data) {
         localStorage.setItem('auth_user', data.username);
     });
 
-    socket.on('create_post', function(data) {
+    socket.on('create_post', function (data) {
         console.log('New post received: ', data.data);
         addPostToContainer(data.data)
     });
 
-    socket.on('like_post', function(data) {
+    socket.on('like_post', function (data) {
         console.log('Like post received, id:', data.post_id, 'like count:', data.like_count, 'liked by:', data.like_list);
         const postContainer = document.getElementById(data.post_id);
         if (postContainer) {
@@ -443,7 +464,7 @@ function initWS() {
             postContainer.querySelector('.post-likes-list');
 
             let likedBy = postContainer.querySelector('.post-likes-list');
-            if (likedBy){
+            if (likedBy) {
                 likedBy.innerHTML = `Liked by: ${data.like_list.join(', ')}`;
             } else {
                 likedBy = document.createElement('div');
@@ -454,7 +475,7 @@ function initWS() {
         }
     });
 
-    socket.on('unlike_post', function(data) {
+    socket.on('unlike_post', function (data) {
         console.log('Unlike post received, id:', data.post_id, 'like count:', data.like_count, 'liked by:', data.like_list);
         const postContainer = document.getElementById(data.post_id);
         if (postContainer) {
@@ -464,7 +485,7 @@ function initWS() {
             postContainer.querySelector('.post-likes-list');
 
             let likedBy = postContainer.querySelector('.post-likes-list');
-            if (data.like_list.length > 0){
+            if (data.like_list.length > 0) {
                 likedBy.innerHTML = `Liked by: ${data.like_list.join(', ')}`;
             } else {
                 likedBy.remove();
@@ -472,33 +493,33 @@ function initWS() {
         }
     });
 
-    socket.on('delete_post', function(data) {
+    socket.on('delete_post', function (data) {
         console.log('Delete post received, id:', data.post_id);
         const postContainer = document.getElementById(data.post_id);
         postContainer.remove();
-        
+
     });
 
-    socket.on('unauthorized', function(data) {
+    socket.on('unauthorized', function (data) {
         document.cookie = 'xsrf_token=; max-age=0; path=/; domain=' + window.location.hostname;
         socket.disconnect();
         alert(data.message);
     });
 
-    socket.on('schedule_post_error', function(data) {
+    socket.on('schedule_post_error', function (data) {
         alert(data.message);
     });
 
-    socket.on('remaining_time', function(data) {
+    socket.on('remaining_time', function (data) {
         addScheduledPostToContainer(data);
     });
-    
-    socket.on('created_scheduled_post', function() {
-            const scheduledPostContainer = document.getElementById("scheduledPostContainer");
-            scheduledPostContainer.innerHTML = "";
-            scheduledPostContainer.style.display = "none";
+
+    socket.on('created_scheduled_post', function () {
+        const scheduledPostContainer = document.getElementById("scheduledPostContainer");
+        scheduledPostContainer.innerHTML = "";
+        scheduledPostContainer.style.display = "none";
     });
-    
+
 }
 
 function setFontSize(size) {
@@ -543,7 +564,7 @@ function createScheduledPostHTML(postData) {
 
     const authorLine = document.createElement("div");
     authorLine.className = "post-author-line";
-    
+
     const username = document.createElement("div");
     username.className = "post-username";
     username.textContent = postData.message;
