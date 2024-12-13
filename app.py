@@ -422,7 +422,7 @@ def handle_connect():
         socketio.emit('unauthorized', {'message': 'Session expired/invalid token, please login again.'}, to=request.sid)
         return
         
-    username = session.get("username")
+    username = user.get("username")
     if username:
         user_sockets[username] = request.sid
         socketio.emit('auth', {'username': username}, to=request.sid)
