@@ -73,10 +73,12 @@ function welcome() {
 
     if (ws) {
         initWS();
+        getPosts();
     } else {
+        getPosts();
         setInterval(getPosts, 3000);
     }
-    getPosts();
+    
 }
 
 function addPostToContainer(messageJSON) {
