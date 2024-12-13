@@ -167,6 +167,7 @@ function getPosts() {
 }
 
 function updatePosts(serverPosts) {
+    user = localStorage.getItem('auth_user');
     let serverIndex = 0;
     let localIndex = 0;
 
