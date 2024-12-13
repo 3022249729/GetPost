@@ -294,12 +294,6 @@ def posts():
         response = make_response()
         response.set_data(posts)
         response.mimetype = "application/json"
-
-        auth_token = request.cookies.get("auth_token")
-        user = credential_collection.find_one({"auth_token_hash":hashlib.sha256(auth_token.encode()).hexdigest()})
-        if user:
-            socketio.emit('auth', {'username': user['username']}, to=request.sid)
-
         return response
     
     if request.method == 'POST':

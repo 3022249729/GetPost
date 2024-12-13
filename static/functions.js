@@ -71,11 +71,13 @@ function welcome() {
         }
     });
 
+    const profileName = document.getElementById("profileName").textContent;
+    localStorage.setItem('auth_user', profileName);
+
+    getPosts();
     if (ws) {
-        initWS();
-        getPosts();
+        initWS();  
     } else {
-        getPosts();
         setInterval(getPosts, 3000);
     }
     
