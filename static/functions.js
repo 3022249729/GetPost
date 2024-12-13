@@ -71,13 +71,12 @@ function welcome() {
         }
     });
 
-    getPosts();
-
     if (ws) {
         initWS();
     } else {
         setInterval(getPosts, 3000);
     }
+    getPosts();
 }
 
 function addPostToContainer(messageJSON) {
